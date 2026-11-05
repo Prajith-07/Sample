@@ -120,10 +120,9 @@ HTML;
                     error_log("Password reset mail error: " . $e->getMessage());
                 }
 
-                $success = "If your email is registered in our database, a password reset link has been dispatched to your inbox.";
+                $success = "A secure password reset link has been dispatched to \"{$email}\". Please check your inbox (and Spam folder).";
             } else {
-                // Generic response to prevent user enumeration
-                $success = "If your email is registered in our database, a password reset link has been dispatched to your inbox.";
+                $error = "No account found with email \"{$email}\". Please enter the exact email registered for your team leader, member, or mentor account.";
             }
         }
     }
