@@ -90,6 +90,15 @@
                 }
             }
 
+            // If reset password form, verify password confirmation
+            const newPwdInput = form.querySelector('input[name="new_password"]');
+            const newConfirmInput = form.querySelector('input[name="confirm_password"]');
+            if (newPwdInput && newConfirmInput) {
+                if (newPwdInput.value && newConfirmInput.value && newPwdInput.value !== newConfirmInput.value) {
+                    isValid = false;
+                }
+            }
+
             if (!emailAvailable) {
                 isValid = false;
             }

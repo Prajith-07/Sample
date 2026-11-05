@@ -5,6 +5,8 @@
  * Supports XAMPP MySQL / MariaDB
  */
 
+date_default_timezone_set('Asia/Kolkata');
+
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', '3306');
 define('DB_NAME', 'itech_seed_2027');
@@ -27,6 +29,7 @@ function getDatabaseConnection() {
 
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $pdo->exec("SET time_zone = '+05:30'");
         
         // Ensure required tables exist even if DB already existed
         ensureTablesExist($pdo);

@@ -64,22 +64,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($userFound) {
                 $token = bin2hex(random_bytes(32));
-                $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour
 
                 if ($userType === 'mentor') {
-                    $stmtUp = $pdo->prepare("UPDATE `team_mentors` SET reset_token = :token, reset_token_expires = :exp WHERE id = :id");
-                    $stmtUp->execute([':token' => $token, ':exp' => $expires, ':id' => $userFound['id']]);
+                    $stmtUp = $pdo->prepare("UPDATE `team_mentors` SET reset_token = :token, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = :id");
+                    $stmtUp->execute([':token' => $token, ':id' => $userFound['id']]);
                 } elseif ($userType === 'team_lead') {
-                    $stmtUp = $pdo->prepare("UPDATE `teams` SET reset_token = :token, reset_token_expires = :exp WHERE id = :id");
-                    $stmtUp->execute([':token' => $token, ':exp' => $expires, ':id' => $userFound['id']]);
+                    $stmtUp = $pdo->prepare("UPDATE `teams` SET reset_token = :token, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = :id");
+                    $stmtUp->execute([':token' => $token, ':id' => $userFound['id']]);
                     // Also update team_members lead row if exists
-                    $pdo->prepare("UPDATE `team_members` SET reset_token = :token, reset_token_expires = :exp WHERE team_id = :tid AND is_lead = 1")->execute([':token' => $token, ':exp' => $expires, ':tid' => $userFound['id']]);
+                    $pdo->prepare("UPDATE `team_members` SET reset_token = :token, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE team_id = :tid AND is_lead = 1")->execute([':token' => $token, ':tid' => $userFound['id']]);
                 } else {
-                    $stmtUp = $pdo->prepare("UPDATE `team_members` SET reset_token = :token, reset_token_expires = :exp WHERE id = :id");
-                    $stmtUp->execute([':token' => $token, ':exp' => $expires, ':id' => $userFound['id']]);
+                    $stmtUp = $pdo->prepare("UPDATE `team_members` SET reset_token = :token, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = :id");
+                    $stmtUp->execute([':token' => $token, ':id' => $userFound['id']]);
                     // If this member is the team lead, also update teams table
                     if (!empty($userFound['is_lead']) && !empty($userFound['team_id'])) {
-                        $pdo->prepare("UPDATE `teams` SET reset_token = :token, reset_token_expires = :exp WHERE id = :tid")->execute([':token' => $token, ':exp' => $expires, ':tid' => $userFound['team_id']]);
+                        $pdo->prepare("UPDATE `teams` SET reset_token = :token, reset_token_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = :tid")->execute([':token' => $token, ':tid' => $userFound['team_id']]);
                     }
                 }
 
