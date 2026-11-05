@@ -5202,7 +5202,251 @@ body::before {
   border-color: rgba(236, 246, 234, 0.12) !important;
 }
 
+/* 8. Registration Add Member Button in Dark Mode */
+:root[data-theme="dark"] .btn-add-member {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border: 2px dashed var(--accent) !important;
+  color: var(--accent) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
 
+:root[data-theme="dark"] .btn-add-member:hover:not(:disabled) {
+  background: var(--accent) !important;
+  border-style: solid !important;
+  color: #121c0b !important;
+  box-shadow: 0 8px 24px rgba(200, 255, 80, 0.35) !important;
+  transform: translateY(-2px);
+}
 
+:root[data-theme="dark"] .btn-add-member.btn-disabled {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(162, 173, 163, 0.5) !important;
+}
 
+/* 9. Step 2-7 Team Context Banner in Dark Mode */
+:root[data-theme="dark"] .team-context-banner {
+  background: linear-gradient(135deg, rgba(200, 255, 80, 0.08) 0%, rgba(14, 21, 16, 0.95) 100%) !important;
+  border: 1.5px solid rgba(200, 255, 80, 0.28) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .team-context-left span {
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .team-context-left strong {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .app-ref-badge {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 255, 80, 0.35) !important;
+}
+
+:root[data-theme="dark"] .team-context-right a {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .team-context-right a:hover {
+  text-decoration: underline !important;
+}
+
+/* 10. PoC Radio Selection Cards (Step 2) in Dark Mode */
+:root[data-theme="dark"] .poc-radio-card {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card:hover {
+  background: rgba(255, 255, 255, 0.075) !important;
+  border-color: rgba(200, 255, 80, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card.poc-card-active {
+  background: linear-gradient(135deg, rgba(200, 255, 80, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 24px rgba(200, 255, 80, 0.22), inset 0 0 12px rgba(200, 255, 80, 0.06) !important;
+}
+
+:root[data-theme="dark"] .poc-card-title {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .poc-card-desc {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .poc-radio-indicator {
+  border: 2px solid rgba(200, 255, 80, 0.4) !important;
+  background: transparent !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card.poc-card-active .poc-radio-indicator {
+  border-color: var(--accent) !important;
+  background: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card.poc-card-active .poc-radio-indicator::after {
+  background: #111a14 !important;
+  opacity: 1 !important;
+}
+
+/* 11. 6-Month Milestone Implementation Roadmap (Step 4) in Dark Mode */
+:root[data-theme="dark"] .milestones-table-wrap {
+  background: rgba(14, 21, 16, 0.9) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .milestones-table thead {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 2px solid rgba(200, 255, 80, 0.25) !important;
+}
+
+:root[data-theme="dark"] .milestones-table th {
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+
+:root[data-theme="dark"] .milestones-table td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(236, 246, 234, 0.08) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .milestones-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+:root[data-theme="dark"] .month-badge-primary {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .month-date-sub {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .milestone-event-review {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+:root[data-theme="dark"] .milestone-event-demo {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tr-highlight-review {
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+:root[data-theme="dark"] .tr-highlight-demo {
+  background: rgba(16, 185, 129, 0.05) !important;
+}
+
+:root[data-theme="dark"] .milestone-cell-textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.16) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .milestone-cell-textarea:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(200, 255, 80, 0.25) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .milestone-cell-textarea::placeholder {
+  color: rgba(162, 173, 163, 0.5) !important;
+}
+
+/* 12. Step 5 Budget Table & Tranche Items in Dark Mode */
+:root[data-theme="dark"] .budget-table-wrap {
+  background: rgba(14, 21, 16, 0.9) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .budget-table thead {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 2px solid rgba(200, 255, 80, 0.25) !important;
+}
+
+:root[data-theme="dark"] .budget-table th {
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+
+:root[data-theme="dark"] .budget-table td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(236, 246, 234, 0.08) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .budget-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+:root[data-theme="dark"] .row-num {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .btn-add-item {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border: 1.5px dashed var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .btn-add-item:hover {
+  background: var(--accent) !important;
+  border-style: solid !important;
+  color: #121c0b !important;
+}
+
+:root[data-theme="dark"] .tranche-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .tranche-item:hover {
+  border-color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .expandable-funding-block {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(236, 246, 234, 0.12) !important;
+}
+
+:root[data-theme="dark"] .funding-notice-bar {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border-left-color: var(--accent) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .success-modal-card {
+  background: #111a14 !important;
+  border-color: rgba(200, 255, 80, 0.35) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .modal-title {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .modal-sub {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .modal-app-box {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(200, 255, 80, 0.3) !important;
+}
 
