@@ -26,7 +26,9 @@ if (!$pdo) {
 
 $field = trim($_REQUEST['field'] ?? '');
 $value = trim($_REQUEST['value'] ?? '');
-$excludeTeamId = isset($_REQUEST['exclude_team_id']) ? (int)$_REQUEST['exclude_team_id'] : 0;
+// Safely bind excludeTeamId to authenticated user's session team_id
+$sessionTeamId = (int)($_SESSION['team_id'] ?? 0);
+$excludeTeamId = $sessionTeamId > 0 ? $sessionTeamId : (isset($_REQUEST['exclude_team_id']) ? (int)$_REQUEST['exclude_team_id'] : 0);
 
 if (empty($field) || empty($value)) {
     echo json_encode(['available' => true, 'message' => '']);

@@ -7,12 +7,30 @@
 
 declare(strict_types=1);
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method Not Allowed. Use POST.']);
+    exit;
+}
+
+// Authentication & Authorization Guard
+$sessionTeamId = (int)($_SESSION['team_id'] ?? 0);
+if ($sessionTeamId <= 0) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized: Please sign in.']);
+    exit;
+}
+
+if (empty($_SESSION['is_lead'])) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Forbidden: Only the Team Leader can resend mentor emails.']);
     exit;
 }
 
@@ -28,7 +46,13 @@ if (!is_array($data)) {
     exit;
 }
 
-$teamId   = isset($data['team_id']) ? (int)$data['team_id'] : 0;
+$payloadTeamId = isset($data['team_id']) ? (int)$data['team_id'] : 0;
+if ($payloadTeamId > 0 && $payloadTeamId !== $sessionTeamId) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Forbidden: Team ID parameter tampering detected.']);
+    exit;
+}
+$teamId   = $sessionTeamId;
 $mentorId = isset($data['mentor_id']) ? (int)$data['mentor_id'] : 0;
 $newEmail = isset($data['email']) ? trim((string)$data['email']) : '';
 

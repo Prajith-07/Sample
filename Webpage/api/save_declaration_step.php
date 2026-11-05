@@ -20,7 +20,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (isset($_SESSION['is_lead']) && $_SESSION['is_lead'] === false) {
+// Authentication & Authorization Guard
+$sessionTeamId = (int)($_SESSION['team_id'] ?? 0);
+if ($sessionTeamId <= 0) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized: Please sign in to submit the declaration.'
+    ]);
+    exit;
+}
+
+if (empty($_SESSION['is_lead'])) {
     http_response_code(403);
     echo json_encode([
         'success' => false,
@@ -41,7 +52,37 @@ if (!is_array($data)) {
     exit;
 }
 
-$teamId           = isset($data['team_id']) ? (int)$data['team_id'] : 0;
+$payloadTeamId = isset($data['team_id']) ? (int)$data['team_id'] : 0;
+if ($payloadTeamId > 0 && $payloadTeamId !== $sessionTeamId) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Forbidden: Team ID parameter tampering detected.'
+    ]);
+    exit;
+}
+$teamId = $sessionTeamId;
+
+$pdo = getDatabaseConnection();
+if (!$pdo) {
+    http_response_code(503);
+    echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
+    exit;
+}
+
+// Check if team is already submitted
+$stmtSt = $pdo->prepare("SELECT status FROM `teams` WHERE id = :tid");
+$stmtSt->execute([':tid' => $teamId]);
+$teamStatus = $stmtSt->fetchColumn();
+if ($teamStatus && in_array($teamStatus, ['Submitted', 'Under Screening', 'Approved', 'Completed'], true)) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => 'This team application has already been submitted and cannot be modified.'
+    ]);
+    exit;
+}
+
 $leadSignature    = trim((string)($data['lead_signature_name'] ?? ''));
 $leadSigDate      = trim((string)($data['lead_signature_date'] ?? ''));
 

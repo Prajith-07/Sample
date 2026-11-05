@@ -19,130 +19,115 @@ if (!empty($_SESSION['must_change_password'])) {
  */
 require_once __DIR__ . '/config/db.php';
 
-$pdo = getDatabaseConnection();
-$currentStep = isset($_GET['step']) ? (int)$_GET['step'] : 1;
-$editTeamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
-if ($editTeamId <= 0 && !empty($_SESSION['team_id'])) {
-    $editTeamId = (int)$_SESSION['team_id'];
+// 1. Mandatory Session Authentication Guard
+if (empty($_SESSION['team_id']) || (int)$_SESSION['team_id'] <= 0) {
+    header("Location: login.php?auth_required=1");
+    exit;
 }
-$isLeader = !empty($_SESSION['is_lead']);
-$appNo = trim($_GET['app_no'] ?? '');
 
-$existingTeam = null;
-$existingMembers = [];
-$existingMentors = [];
-$existingProposal = null;
+$sessionTeamId = (int)$_SESSION['team_id'];
+$pdo = getDatabaseConnection();
+if (!$pdo) {
+    die("Database service unavailable. Please ensure MySQL is running in XAMPP.");
+}
+
+// 2. Fetch the authenticated team record strictly using session team_id
+$stmt = $pdo->prepare("SELECT * FROM `teams` WHERE id = :id");
+$stmt->execute([':id' => $sessionTeamId]);
+$existingTeam = $stmt->fetch();
+
+if (!$existingTeam) {
+    // Session team_id does not exist in DB (invalid session)
+    unset($_SESSION['team_id'], $_SESSION['user_email'], $_SESSION['team_name'], $_SESSION['is_lead']);
+    header("Location: login.php?invalid_session=1");
+    exit;
+}
+
+// 3. Status Check: If already submitted, redirect to registration_success.php
+if (in_array($existingTeam['status'] ?? '', ['Submitted', 'Under Screening', 'Approved', 'Completed'], true)) {
+    header("Location: registration_success.php?team_id=" . $sessionTeamId);
+    exit;
+}
+
+$editTeamId = $sessionTeamId;
+$stagedLeaderEmail = $_SESSION['staged_lead_email'] ?? ($_SESSION['user_email'] ?? ($existingTeam['leader_email'] ?? ''));
+
+// Members
+$stmtM = $pdo->prepare("SELECT * FROM `team_members` WHERE team_id = :tid ORDER BY member_order ASC");
+$stmtM->execute([':tid' => $sessionTeamId]);
+$existingMembers = $stmtM->fetchAll();
+
+$isLeader = false;
 $leadMember = null;
-$stagedLeaderEmail = $_SESSION['staged_lead_email'] ?? ($_SESSION['user_email'] ?? '');
+$userEmail = strtolower(trim((string)($_SESSION['user_email'] ?? '')));
 
-if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
-    try {
-        if ($editTeamId > 0) {
-            $stmt = $pdo->prepare("SELECT * FROM `teams` WHERE id = :id");
-            $stmt->execute([':id' => $editTeamId]);
-        } else {
-            $stmt = $pdo->prepare("SELECT * FROM `teams` WHERE application_no = :app");
-            $stmt->execute([':app' => $appNo]);
-        }
-        $existingTeam = $stmt->fetch();
-
-        if ($existingTeam) {
-            $tId = $existingTeam['id'];
-            if (in_array($existingTeam['status'] ?? '', ['Submitted', 'Under Screening', 'Approved', 'Completed'], true) && !isset($_GET['edit'])) {
-                header("Location: registration_success.php?team_id=" . (int)$tId);
-                exit;
-            }
-            if (empty($stagedLeaderEmail) && !empty($existingTeam['leader_email'])) {
-                $stagedLeaderEmail = $existingTeam['leader_email'];
-            }
-            
-            // Members
-            $stmtM = $pdo->prepare("SELECT * FROM `team_members` WHERE team_id = :tid ORDER BY member_order ASC");
-            $stmtM->execute([':tid' => $tId]);
-            $existingMembers = $stmtM->fetchAll();
-            foreach ($existingMembers as $m) {
-                if ($m['is_lead']) {
-                    $leadMember = $m;
-                    break;
-                }
-            }
-
-            // Always re-verify leader status from DB against logged in email (for new & existing members)
-            $userEmail = strtolower(trim((string)($_SESSION['user_email'] ?? '')));
-            if (!empty($userEmail)) {
-                if (strtolower(trim($existingTeam['leader_email'] ?? '')) === $userEmail) {
-                    $isLeader = true;
-                    $_SESSION['is_lead'] = true;
-                } else {
-                    foreach ($existingMembers as $m) {
-                        if (strtolower(trim($m['college_email'])) === $userEmail) {
-                            $isLeader = !empty($m['is_lead']);
-                            $_SESSION['is_lead'] = $isLeader;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Mentors
-            $stmtMen = $pdo->prepare("SELECT * FROM `team_mentors` WHERE team_id = :tid");
-            $stmtMen->execute([':tid' => $tId]);
-            $existingMentors = $stmtMen->fetchAll();
-
-            $facMentor = null;
-            $addFacMentor = null;
-            $indMentor = null;
-            if (!empty($existingMentors)) {
-                foreach ($existingMentors as $m) {
-                    if ($m['mentor_type'] === 'faculty') {
-                        $facMentor = $m;
-                    } elseif ($m['mentor_type'] === 'additional_faculty') {
-                        $addFacMentor = $m;
-                    } elseif ($m['mentor_type'] === 'industry') {
-                        $indMentor = $m;
-                    }
-                }
-            }
-
-            // Proposals
-            $stmtProp = $pdo->prepare("SELECT * FROM `proposals` WHERE team_id = :tid");
-            $stmtProp->execute([':tid' => $tId]);
-            $existingProposal = $stmtProp->fetch();
-
-            // Milestones (Step 4)
-            $existingMilestones = [];
-            $stmtMstone = $pdo->prepare("SELECT * FROM `proposal_milestones` WHERE team_id = :tid ORDER BY month_number ASC");
-            $stmtMstone->execute([':tid' => $tId]);
-            $mRows = $stmtMstone->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($mRows as $mr) {
-                $existingMilestones[$mr['month_number']] = $mr;
-            }
-
-            // Budget Items (Step 5)
-            $existingBudgetItems = [];
-            $stmtBudget = $pdo->prepare("SELECT * FROM `proposal_budget_items` WHERE team_id = :tid ORDER BY item_order ASC, id ASC");
-            $stmtBudget->execute([':tid' => $tId]);
-            $existingBudgetItems = $stmtBudget->fetchAll(PDO::FETCH_ASSOC);
-
-            // Compute Mentor Approval Status for Step 7 Finish Registration
-            $facultyApproved = false;
-            $industryApproved = false;
-            if (!empty($existingMentors)) {
-                foreach ($existingMentors as $m) {
-                    if ($m['mentor_type'] === 'faculty' && ($m['approval_status'] ?? '') === 'Approved') {
-                        $facultyApproved = true;
-                    }
-                    if ($m['mentor_type'] === 'industry' && ($m['approval_status'] ?? '') === 'Approved') {
-                        $industryApproved = true;
-                    }
-                }
-            }
-            $allMentorsApproved = ($facultyApproved && $industryApproved);
-        }
-    } catch (PDOException $e) {
-        error_log("Lookup error: " . $e->getMessage());
+foreach ($existingMembers as $m) {
+    if (!empty($m['is_lead'])) {
+        $leadMember = $m;
+    }
+    if (!empty($userEmail) && strtolower(trim((string)($m['college_email'] ?? ''))) === $userEmail) {
+        $isLeader = !empty($m['is_lead']);
     }
 }
+if (!$isLeader && !empty($userEmail) && strtolower(trim((string)($existingTeam['leader_email'] ?? ''))) === $userEmail) {
+    $isLeader = true;
+}
+$_SESSION['is_lead'] = $isLeader;
+
+// Mentors
+$stmtMen = $pdo->prepare("SELECT * FROM `team_mentors` WHERE team_id = :tid");
+$stmtMen->execute([':tid' => $sessionTeamId]);
+$existingMentors = $stmtMen->fetchAll();
+
+$facMentor = null;
+$addFacMentor = null;
+$indMentor = null;
+if (!empty($existingMentors)) {
+    foreach ($existingMentors as $m) {
+        if ($m['mentor_type'] === 'faculty') {
+            $facMentor = $m;
+        } elseif ($m['mentor_type'] === 'additional_faculty') {
+            $addFacMentor = $m;
+        } elseif ($m['mentor_type'] === 'industry') {
+            $indMentor = $m;
+        }
+    }
+}
+
+// Proposals
+$stmtProp = $pdo->prepare("SELECT * FROM `proposals` WHERE team_id = :tid");
+$stmtProp->execute([':tid' => $sessionTeamId]);
+$existingProposal = $stmtProp->fetch();
+
+// Milestones (Step 4)
+$existingMilestones = [];
+$stmtMstone = $pdo->prepare("SELECT * FROM `proposal_milestones` WHERE team_id = :tid ORDER BY month_number ASC");
+$stmtMstone->execute([':tid' => $sessionTeamId]);
+$mRows = $stmtMstone->fetchAll(PDO::FETCH_ASSOC);
+foreach ($mRows as $mr) {
+    $existingMilestones[$mr['month_number']] = $mr;
+}
+
+// Budget Items (Step 5)
+$existingBudgetItems = [];
+$stmtBudget = $pdo->prepare("SELECT * FROM `proposal_budget_items` WHERE team_id = :tid ORDER BY item_order ASC, id ASC");
+$stmtBudget->execute([':tid' => $sessionTeamId]);
+$existingBudgetItems = $stmtBudget->fetchAll(PDO::FETCH_ASSOC);
+
+// Compute Mentor Approval Status for Step 7 Finish Registration
+$facultyApproved = false;
+$industryApproved = false;
+if (!empty($existingMentors)) {
+    foreach ($existingMentors as $m) {
+        if ($m['mentor_type'] === 'faculty' && ($m['approval_status'] ?? '') === 'Approved') {
+            $facultyApproved = true;
+        }
+        if ($m['mentor_type'] === 'industry' && ($m['approval_status'] ?? '') === 'Approved') {
+            $industryApproved = true;
+        }
+    }
+}
+$allMentorsApproved = ($facultyApproved && $industryApproved);
 
 // Determine whether a given step has been completed by the team leader
 if (!function_exists('isStepCompletedByLeader')) {
@@ -193,6 +178,45 @@ for ($s = 1; $s <= 7; $s++) {
         $highestCompletedStep = $s;
     }
 }
+
+// Maximum step the team is authorized to access
+$teamMaxStep = max(1, (int)($existingTeam['current_step'] ?? 1));
+if ($teamMaxStep > 7) {
+    $teamMaxStep = 7;
+}
+
+// 4. Validate & Sanitize requested step
+$requestedStep = isset($_GET['step']) ? (int)$_GET['step'] : $teamMaxStep;
+if ($requestedStep < 1) {
+    $requestedStep = 1;
+} elseif ($requestedStep > 7) {
+    $requestedStep = 7;
+}
+
+// Step Authorization Guard:
+// User can only view a step if:
+// - It is Step 1
+// - OR it is <= team's current unlocked step ($teamMaxStep)
+// - OR the step is completed
+$isRequestedStepAuthorized = ($requestedStep === 1 || $requestedStep <= $teamMaxStep || isStepCompletedByLeader($requestedStep, $existingTeam, $existingMembers, $existingProposal, $milestonesList, $budgetList));
+
+if (!$isRequestedStepAuthorized) {
+    // Attempting to skip ahead to an unreached/unauthorized step: Lock back to current unlocked step!
+    $requestedStep = $teamMaxStep;
+}
+
+// 5. Anti-Tampering URL Parameter Enforcement:
+// Ensure URL query parameters strictly match authorized session team_id and authorized step.
+// If user tampers with params in the URL bar, redirect immediately back to the authorized URL.
+$urlTeamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+$urlStep   = isset($_GET['step']) ? (int)$_GET['step'] : 0;
+
+if ($urlTeamId !== $sessionTeamId || $urlStep !== $requestedStep) {
+    header("Location: register.php?step={$requestedStep}&team_id={$sessionTeamId}");
+    exit;
+}
+
+$currentStep = $requestedStep;
 
 $isCurrentStepCompleted = isStepCompletedByLeader(
     $currentStep,
@@ -407,16 +431,8 @@ $isCurrentStepCompleted = isStepCompletedByLeader(
             $isStepDone  = isStepCompletedByLeader($stepNum, $existingTeam, $existingMembers, $existingProposal, $milestonesList, $budgetList);
             $itemClass   = 'step-dock-item' . ($isActive ? ' step-dock-active' : ($isStepDone ? ' step-dock-completed' : ' step-dock-pending'));
             
-            // Leader can navigate to any completed step OR to their current working step
-            // Team member can navigate to any step (completed steps show details, incomplete steps show the pending message)
-            $canNavigate = false;
-            if ($existingTeam) {
-                if ($isLeader) {
-                    $canNavigate = ($isStepDone || $stepNum <= max(1, (int)$existingTeam['current_step']));
-                } else {
-                    $canNavigate = true;
-                }
-            }
+            // Navigation is authorized only for completed steps or the current unlocked step
+            $canNavigate = ($isStepDone || $stepNum <= $teamMaxStep);
             $linkUrl = ($canNavigate && $existingTeam) ? "register.php?step={$stepNum}&team_id=" . (int)$existingTeam['id'] : null;
           ?>
             <?php if ($linkUrl): ?>

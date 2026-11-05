@@ -8,10 +8,34 @@
 
 declare(strict_types=1);
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 1. Mandatory Session Authentication Guard
+if (empty($_SESSION['team_id']) && empty($_SESSION['coordinator_id'])) {
+    header("Location: login.php?auth_required=1");
+    exit;
+}
+
+$sessionTeamId = (int)($_SESSION['team_id'] ?? 0);
+$urlTeamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+
+// 2. Strict URL Parameter Tampering Guard:
+// If not an admin/coordinator, only permit downloading the user's own team report
+if (empty($_SESSION['coordinator_id'])) {
+    if ($urlTeamId !== $sessionTeamId) {
+        header("Location: download_report.php?team_id=" . $sessionTeamId);
+        exit;
+    }
+} else {
+    $sessionTeamId = $urlTeamId > 0 ? $urlTeamId : $sessionTeamId;
+}
+
 require_once __DIR__ . '/config/db.php';
 
 $pdo = getDatabaseConnection();
-$teamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+$teamId = $sessionTeamId;
 $appNo  = trim($_GET['app_no'] ?? '');
 
 $team = null;
@@ -23,15 +47,10 @@ $budgetItems = [];
 $leadMember = null;
 $errorMessage = null;
 
-if ($pdo && ($teamId > 0 || !empty($appNo))) {
+if ($pdo && $teamId > 0) {
     try {
-        if ($teamId > 0) {
-            $stmtT = $pdo->prepare("SELECT * FROM `teams` WHERE id = :id LIMIT 1");
-            $stmtT->execute([':id' => $teamId]);
-        } else {
-            $stmtT = $pdo->prepare("SELECT * FROM `teams` WHERE application_no = :app LIMIT 1");
-            $stmtT->execute([':app' => $appNo]);
-        }
+        $stmtT = $pdo->prepare("SELECT * FROM `teams` WHERE id = :id LIMIT 1");
+        $stmtT->execute([':id' => $teamId]);
         $team = $stmtT->fetch(PDO::FETCH_ASSOC);
 
         if (!$team) {

@@ -15,10 +15,26 @@ if (!empty($_SESSION['must_change_password'])) {
     exit;
 }
 
+// 1. Mandatory Session Authentication Guard
+if (empty($_SESSION['team_id']) || (int)$_SESSION['team_id'] <= 0) {
+    header("Location: login.php?auth_required=1");
+    exit;
+}
+
+$sessionTeamId = (int)$_SESSION['team_id'];
+
+// 2. Strict URL Parameter Tampering Guard:
+// If the URL team_id is missing or tampered to another team, redirect to session's own team_id
+$urlTeamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+if ($urlTeamId !== $sessionTeamId) {
+    header("Location: registration_success.php?team_id=" . $sessionTeamId);
+    exit;
+}
+
 require_once __DIR__ . '/config/db.php';
 
 $pdo = getDatabaseConnection();
-$teamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+$teamId = $sessionTeamId;
 $appNo  = trim($_GET['app_no'] ?? '');
 
 $team = null;
@@ -30,15 +46,10 @@ $budgetItems = [];
 $leadMember = null;
 $errorMessage = null;
 
-if ($pdo && ($teamId > 0 || !empty($appNo))) {
+if ($pdo && $teamId > 0) {
     try {
-        if ($teamId > 0) {
-            $stmtT = $pdo->prepare("SELECT * FROM `teams` WHERE id = :id LIMIT 1");
-            $stmtT->execute([':id' => $teamId]);
-        } else {
-            $stmtT = $pdo->prepare("SELECT * FROM `teams` WHERE application_no = :app LIMIT 1");
-            $stmtT->execute([':app' => $appNo]);
-        }
+        $stmtT = $pdo->prepare("SELECT * FROM `teams` WHERE id = :id LIMIT 1");
+        $stmtT->execute([':id' => $teamId]);
         $team = $stmtT->fetch(PDO::FETCH_ASSOC);
 
         if (!$team) {

@@ -36,15 +36,19 @@ if (!$data) {
     $data = $_POST;
 }
 
-$teamId = isset($data['team_id']) ? (int)$data['team_id'] : 0;
-$teamName = trim($data['team_name'] ?? '');
-$members = $data['members'] ?? [];
-$faculty = $data['faculty_mentor'] ?? [];
-$addFaculty = $data['additional_faculty'] ?? [];
-$industry = $data['industry_mentor'] ?? [];
+// Authentication & Authorization Guard
+$sessionTeamId = (int)($_SESSION['team_id'] ?? 0);
+if ($sessionTeamId <= 0) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unauthorized: Please sign in to create or edit your team registration.'
+    ]);
+    exit;
+}
 
-// Restrict member modifications strictly to Team Leader
-if (isset($_SESSION['is_lead']) && $_SESSION['is_lead'] === false) {
+// Restrict modifications strictly to Team Leader
+if (empty($_SESSION['is_lead'])) {
     http_response_code(403);
     echo json_encode([
         'success' => false,
@@ -52,6 +56,36 @@ if (isset($_SESSION['is_lead']) && $_SESSION['is_lead'] === false) {
     ]);
     exit;
 }
+
+$payloadTeamId = isset($data['team_id']) ? (int)$data['team_id'] : 0;
+if ($payloadTeamId > 0 && $payloadTeamId !== $sessionTeamId) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Forbidden: Team ID parameter tampering detected.'
+    ]);
+    exit;
+}
+$teamId = $sessionTeamId;
+
+// Check if team is already submitted
+$stmtSt = $pdo->prepare("SELECT status FROM `teams` WHERE id = :tid");
+$stmtSt->execute([':tid' => $teamId]);
+$teamStatus = $stmtSt->fetchColumn();
+if ($teamStatus && in_array($teamStatus, ['Submitted', 'Under Screening', 'Approved', 'Completed'], true)) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => 'This team application has already been submitted and cannot be modified.'
+    ]);
+    exit;
+}
+
+$teamName = trim($data['team_name'] ?? '');
+$members = $data['members'] ?? [];
+$faculty = $data['faculty_mentor'] ?? [];
+$addFaculty = $data['additional_faculty'] ?? [];
+$industry = $data['industry_mentor'] ?? [];
 
 $errors = [];
 

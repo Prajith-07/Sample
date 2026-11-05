@@ -16,6 +16,10 @@ if (isset($_GET['logged_out'])) {
     $authSuccess = "You have been safely signed out.";
 } elseif (isset($_GET['password_reset'])) {
     $authSuccess = "Your password has been successfully updated. Please sign in with your new password.";
+} elseif (isset($_GET['auth_required'])) {
+    $authError = "Please sign in to access your challenge proposal.";
+} elseif (isset($_GET['invalid_session'])) {
+    $authError = "Your session has expired. Please sign in again.";
 }
 
 // If already logged in, redirect to team's registration
