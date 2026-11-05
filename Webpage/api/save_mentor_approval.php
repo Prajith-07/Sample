@@ -86,8 +86,43 @@ try {
         if (!$consentOriginalIdea) {
             $errors[] = 'You must confirm that you have read the proposal and verify it is original to the best of your knowledge.';
         }
-        if (empty($mentorSig) || mb_strlen($mentorSig) < 3) {
-            $errors[] = 'Please enter your digital e-signature in format: Mentor_Name DD/MM/YYYY.';
+        // E-Signature Name and Date Verification
+        if (!preg_match('/^(.+?)\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})$/u', $mentorSig, $sigMatch)) {
+            $errors[] = "Digital signature must be in format: Mentor_Name DD/MM/YYYY (e.g. " . ($mentor['name'] ?? 'Your Name') . " " . date('d/m/Y') . ").";
+        } else {
+            $typedName = trim($sigMatch[1]);
+            $typedDate = trim($sigMatch[2]);
+
+            // Check if typed name matches registered mentor
+            $normTyped  = strtolower(trim(preg_replace('/^(dr\.|mr\.|ms\.|mrs\.|prof\.)\s*/i', '', preg_replace('/\s+/', ' ', $typedName))));
+            $normMentor = strtolower(trim(preg_replace('/^(dr\.|mr\.|ms\.|mrs\.|prof\.)\s*/i', '', preg_replace('/\s+/', ' ', $mentor['name'] ?? ''))));
+
+            if (!empty($normMentor) && $normTyped !== $normMentor) {
+                $errors[] = "The signature name '{$typedName}' does not match your registered Mentor name '{$mentor['name']}'. You must sign with your own full name.";
+            }
+
+            // Check if date is valid and is TODAY'S DATE
+            if (preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/', $typedDate, $dm)) {
+                $day   = (int)$dm[1];
+                $month = (int)$dm[2];
+                $year  = (int)$dm[3];
+                if ($year < 100) $year += 2000;
+
+                if (!checkdate($month, $day, $year)) {
+                    $errors[] = "The signature date '{$typedDate}' is not a valid calendar date.";
+                } else {
+                    $tz = new DateTimeZone('Asia/Kolkata');
+                    $today = (new DateTime('now', $tz))->format('Y-m-d');
+                    $enteredDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
+
+                    if ($enteredDate !== $today) {
+                        $todayDisplay = (new DateTime('now', $tz))->format('d/m/Y');
+                        $errors[] = "Signature date must be today's date ({$todayDisplay}). You entered: {$typedDate}.";
+                    }
+                }
+            } else {
+                $errors[] = "Invalid signature date format. Must be DD/MM/YYYY.";
+            }
         }
     } else { // Declined
         if (empty($declineReason) || mb_strlen($declineReason) < 10) {

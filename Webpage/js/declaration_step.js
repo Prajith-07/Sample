@@ -131,7 +131,38 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!chkAgree) errors.push('You must undertake to sign the grant agreement and register under DPIIT and Udyam.');
       if (!chkIp) errors.push('You must agree to the institutional IPR policy in the names of inventors and PSG iTech.');
       if (!chkMentor) errors.push('You must confirm that designated mentors have agreed to guide the team.');
-      if (!sigName || sigName.length < 3) errors.push('Please enter your binding digital signature in format: Team_Lead_Name DD/MM/YYYY.');
+      if (!sigName || sigName.length < 3) {
+        errors.push('Please enter your binding digital signature in format: Team_Lead_Name DD/MM/YYYY.');
+      } else {
+        const sigMatch = sigName.match(/^(.+?)\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})$/);
+        if (!sigMatch) {
+          errors.push('Digital signature must follow format: Team_Lead_Name DD/MM/YYYY (e.g. ' + (window.leadName || 'Your Name') + ' ' + (new Date().toLocaleDateString('en-GB')) + ').');
+        } else {
+          const typedName = sigMatch[1].trim();
+          const typedDate = sigMatch[2].trim();
+          
+          if (window.leadName) {
+            const clean = str => str.toLowerCase().replace(/^(dr\.|mr\.|ms\.|mrs\.|prof\.)\s*/i, '').replace(/\s+/g, ' ').trim();
+            if (clean(typedName) !== clean(window.leadName)) {
+              errors.push(`The signature name "${typedName}" does not match registered Team Lead name "${window.leadName}". You must sign with your own full name.`);
+            }
+          }
+
+          const dm = typedDate.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+          if (dm) {
+            let day = parseInt(dm[1], 10);
+            let month = parseInt(dm[2], 10);
+            let year = parseInt(dm[3], 10);
+            if (year < 100) year += 2000;
+            const now = new Date();
+            const todayStr = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+            const enteredStr = String(day).padStart(2, '0') + '/' + String(month).padStart(2, '0') + '/' + year;
+            if (enteredStr !== todayStr) {
+              errors.push(`Signature date must be today's date (${todayStr}). You entered: ${typedDate}.`);
+            }
+          }
+        }
+      }
 
       if (errors.length > 0) {
         showDeclarationAlert('error', errors);
@@ -322,8 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="btn-modal-primary" onclick="window.location.reload();">
               View Live Mentor Status Dashboard &rarr;
             </button>
-            <a href="submissions.php" class="btn-modal-secondary">
-              View Submissions Directory
+            <a href="index.php" class="btn-modal-secondary">
+              Return to Home Page
             </a>
           </div>
         </div>
