@@ -1,0 +1,224 @@
+1. Current API Endpoints
+
+All AJAX API endpoints reside in the Webpage/api/ directory and communicate using application/json.
+
+Endpoint Path	HTTP Method	Input Content-Type	Purpose
+api/check_duplicate.php	GET / POST	Query / Form-Data	Real-time validation for team names, roll numbers, emails, and phone numbers.
+api/save_team_step.php	POST	application/json	Step 1: Saves team identity, student members (lead + co-leads), and 2–3 mentors.
+api/save_idea_step.php	POST	application/json	Step 2: Saves project title, problem statement, existing vs. proposed solutions, and PoC type.
+api/save_readiness_step.php	POST	application/json	Step 3: Saves current TRL level (1–4), prior work done, external funding history, and IP status.
+api/save_poc_plan_step.php	POST	application/json	Step 4: Saves technical feasibility deliverables, test methodology, success criteria, and 6-month roadmap milestones.
+api/save_budget_step.php	POST	application/json	Step 5: Saves itemized cost breakdown (up to ₹1,00,000 maximum) with technical justifications.
+api/save_market_step.php	POST	application/json	Step 6: Saves target customers, market size/need, commercialisation route, and measurable societal impact.
+api/save_declaration_step.php	POST	application/json	Step 7: Records Team Lead digital e-signature (Name DD/MM/YYYY), 5 declarations, and sends review links to mentors.
+api/resend_mentor_email.php	POST	application/json	Regenerates or resends unique magic authorization approval links to mentors.
+api/save_mentor_approval.php	POST	application/json	Processes Faculty & Industry mentor approval / decline decision, consent clauses, and digital e-signature.
+api/subscribe.php	POST	Form-Data	Records student interest and launch alert subscriptions into registration_alerts.
+Key Endpoint Details & Payloads
+POST /api/check_duplicate.php
+Params: field (team_name | roll_number | email | phone), value (string), exclude_team_id (optional int).
+Response: {"available": true|false, "message": "..."}
+POST /api/save_team_step.php
+Payload:
+json
+{
+  "team_id": 1,
+  "team_name": "Team Titans",
+  "members": [
+    {
+      "full_name": "Arun Kumar", "roll_number": "23AD01", "department": "AI & DS",
+      "year_of_study": "III", "college_email": "arun@psgitech.ac.in",
+      "phone_number": "9876543210", "gender": "Male", "is_lead": 1
+    }
+  ],
+  "faculty_mentor": { "name": "Dr. Ramesh", "department": "CSE", "email": "ramesh@psgitech.ac.in", "phone": "9876500001" },
+  "additional_faculty": null,
+  "industry_mentor": { "name": "Suresh Babu", "organisation": "TechCorp", "designation": "VP Eng", "email": "suresh@techcorp.com", "phone": "9876500002" }
+}
+POST /api/save_declaration_step.php
+Payload:
+json
+{
+  "team_id": 1,
+  "lead_signature_name": "Arun Kumar 05/11/2026",
+  "lead_signature_date": "2026-11-05",
+  "lead_declared_originality": 1,
+  "lead_declared_no_funding_overlap": 1,
+  "lead_declared_grant_agreement": 1,
+  "lead_declared_ip_policy": 1,
+  "lead_declared_mentor_guidance": 1
+}
+POST /api/save_mentor_approval.php
+Payload:
+json
+{
+  "token": "6077b1492a4bca76bccd84deddc8cd0125c42a4426a2d27aad4cca1ff004217c",
+  "decision": "Approved",
+  "mentor_signature": "Dr. Ramesh 05/11/2026",
+  "consent_agree_guide": 1,
+  "consent_certify_progress": 1,
+  "consent_original_idea": 1
+}
+2. SQL Database Tables & Columns
+Database Name: itech_seed_2027
+Engine: InnoDB (MySQL 8.0 / MariaDB 10.4)
+Default Charset: utf8mb4 with utf8mb4_unicode_ci
+Table 1: teams
+
+Tracks overall team registration standing, unique application number, and current step progress.
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Internal primary key.
+application_no	varchar(50)	NO	UNI	None	Official ID (e.g. SGC27-034164).
+team_name	varchar(150)	NO	UNI	None	Unique team title.
+team_size	tinyint(4)	NO		2	Number of members (2 to 4).
+has_woman_member	tinyint(1)	NO		0	Diversity criterion flag (1 or 0).
+current_step	tinyint(4)	NO		1	Highest step completed (1 to 7).
+status	enum(...)	YES		'Draft'	'Draft', 'Submitted', 'Under Screening', 'Shortlisted', 'Pitch Day', 'Sanctioned', 'Rejected'.
+created_at	timestamp	NO		current_timestamp()	Creation timestamp.
+updated_at	timestamp	NO		current_timestamp()	Auto-updated timestamp.
+Table 2: team_members
+
+Stores individual student inventors linked to a team.
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+team_id	int(11)	NO	MUL (FK)	None	Foreign key reference to teams.id.
+is_lead	tinyint(1)	NO		0	1 for Designated Team Lead, 0 for member.
+member_order	tinyint(4)	NO		1	Position in team list (1 to 4).
+full_name	varchar(150)	NO		None	Official student name.
+roll_number	varchar(50)	NO	UNI	None	College roll number (unique).
+department	varchar(100)	NO		None	Academic branch.
+year_of_study	enum('II','III','Final')	NO		None	Eligibility tier.
+college_email	varchar(150)	NO	UNI	None	Student institutional email.
+phone_number	varchar(25)	NO	UNI	None	10-digit mobile number.
+gender	enum('Female','Male','Prefer not to say')	NO		None	Used to verify diversity credit.
+created_at	timestamp	NO		current_timestamp()	Registration time.
+updated_at	timestamp	NO		current_timestamp()	Update time.
+Table 3: team_mentors
+
+Tracks faculty and industry mentors, online authentication tokens, and endorsement status.
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+team_id	int(11)	NO	MUL (FK)	None	Foreign key reference to teams.id.
+mentor_type	enum('faculty','additional_faculty','industry')	NO		None	Classification of mentor.
+name	varchar(150)	NO		None	Mentor's full name.
+department	varchar(100)	YES		NULL	Department (for faculty).
+organisation	varchar(150)	YES		NULL	Company/Startup (for industry).
+designation	varchar(150)	YES		NULL	Professional title.
+email	varchar(150)	NO	MUL	None	Email address where link is sent.
+phone	varchar(25)	NO		None	Contact phone number.
+linkedin_url	varchar(255)	YES		NULL	Mentor LinkedIn profile.
+approval_status	enum('Pending','Approved','Declined')	YES		'Pending'	Current endorsement status.
+approval_token	varchar(64)	YES		NULL	64-char SHA256 one-time login token.
+approved_at	datetime	YES		NULL	Date and time when mentor endorsed.
+mentor_ip_address	varchar(45)	YES		NULL	IP address logged during e-signature.
+mentor_signature	varchar(150)	YES		NULL	Digital signature (Name DD/MM/YYYY).
+consent_agree_guide	tinyint(1)	YES		0	Mentorship undertaking consent checkbox.
+consent_certify_progress	tinyint(1)	YES		0	Progress verification consent checkbox.
+consent_original_idea	tinyint(1)	YES		0	Originality certification checkbox.
+decline_reason	text	YES		NULL	Feedback entered if declined.
+email_sent_at	datetime	YES		NULL	Timestamp of email dispatch.
+created_at	timestamp	NO		current_timestamp()	Creation timestamp.
+Table 4: proposals
+
+Stores the project's technical content, TRL standing, market potential, and Team Lead declarations.
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+team_id	int(11)	NO	UNI (FK)	None	Foreign key reference to teams.id (1:1).
+project_title	varchar(255)	NO		None	Innovation / proposal title.
+poc_type	enum('Hardware','Software','Both')	NO		'Both'	Classification of PoC prototype.
+trl_level	tinyint(4)	YES		2	Technology Readiness Level (1–4).
+problem_statement	text	YES		NULL	Problem definition (max 100 words).
+existing_solutions	text	YES		NULL	Competitor analysis (max 100 words).
+proposed_solution	text	YES		NULL	Proposed innovation (max 150 words).
+work_done_so_far	text	YES		NULL	Preliminary research & experiments.
+prior_funding_has	enum('No','Yes')	YES		'No'	Previous external grant flag.
+prior_funding_agency	varchar(255)	YES		NULL	Sponsoring body name.
+prior_funding_amount	varchar(100)	YES		NULL	Prior amount sanctioned.
+prior_funding_overlap	text	YES		NULL	Scope differentiation declaration.
+prior_funding	varchar(255)	YES		'None'	Legacy summary field.
+ip_status	varchar(100)	YES		'None'	Patent / copyright status.
+deliverables	text	YES		NULL	Concrete deliverables of the PoC.
+test_method	text	YES		NULL	Experimental testing methodology.
+success_rate	text	YES		NULL	Verifiable metrics and benchmarks.
+budget_requested	decimal(10,2)	NO		None	Total calculated budget (max ₹1,00,000.00).
+target_users	text	YES		NULL	Target customers / beneficiary segment.
+market_need_size	text	YES		NULL	Size of need, frequency, current costs.
+commercialisation_route	text	YES		NULL	PoC to startup / commercial roadmap.
+societal_impact	text	YES		NULL	Measurable benefits to society/industry.
+proposal_file_path	varchar(255)	YES		NULL	Path to optional uploaded pitch PDF.
+lead_signature_name	varchar(150)	YES		NULL	Team Lead e-signature (Name DD/MM/YYYY).
+lead_signature_date	date	YES		NULL	Date of digital signing.
+lead_declared_at	datetime	YES		NULL	Exact timestamp of lead submission.
+lead_ip_address	varchar(45)	YES		NULL	IP address logged during submission.
+lead_declared_originality	tinyint(1)	YES		0	Originality declaration.
+lead_declared_no_funding_overlap	tinyint(1)	YES		0	Funding non-overlap declaration.
+lead_declared_grant_agreement	tinyint(1)	YES		0	Grant terms agreement.
+lead_declared_ip_policy	tinyint(1)	YES		0	PSG iTech IP policy agreement.
+lead_declared_mentor_guidance	tinyint(1)	YES		0	Mentor guidance confirmation.
+submitted_at	datetime	YES		NULL	Submission completion timestamp.
+updated_at	timestamp	NO		current_timestamp()	Auto-updated timestamp.
+Table 5: proposal_milestones
+
+Stores the 6-month roadmap milestones for Step 4 (scored out of 10 marks).
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+team_id	int(11)	NO	MUL (FK)	None	Foreign key reference to teams.id.
+month_number	tinyint(4)	NO		None	Month index (1 to 6).
+month_label	varchar(100)	NO		None	Month name (e.g. Month 1 - Jan 2027).
+milestone_desc	text	YES		NULL	Tasks and planned activities.
+output_deliverable	text	YES		NULL	Concrete tangible deliverable.
+verification_method	text	YES		NULL	Inspection/testing criterion.
+created_at	timestamp	NO		current_timestamp()	Creation timestamp.
+updated_at	timestamp	NO		current_timestamp()	Auto-updated timestamp.
+Table 6: proposal_budget_items
+
+Stores the itemized financial breakdown for Step 5 (up to ₹1,00,000 maximum).
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+team_id	int(11)	NO	MUL (FK)	None	Foreign key reference to teams.id.
+item_order	int(11)	NO		1	Row sequence.
+item_name	varchar(255)	NO		None	Component / service name.
+category	varchar(100)	NO		None	Category (Electronics, Raw Materials, Fabrication, Cloud/API, Testing, Other).
+quantity	int(11)	NO		1	Units required.
+unit_cost	decimal(10,2)	NO		0.00	Cost per unit (₹).
+amount	decimal(10,2)	NO		0.00	Total cost (quantity * unit_cost).
+purpose	text	YES		NULL	Technical justification.
+created_at	timestamp	NO		current_timestamp()	Creation timestamp.
+updated_at	timestamp	NO		current_timestamp()	Auto-updated timestamp.
+Table 7: evaluations
+
+Scoring table used by the Screening Committee and Grand Jury (scored out of 50 marks).
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+team_id	int(11)	NO	MUL (FK)	None	Foreign key reference to teams.id.
+evaluator_name	varchar(150)	NO		None	Evaluator's name.
+evaluator_role	enum(...)	NO		None	'Screening Committee', 'Jury Member', 'Principal'.
+innovation_score	tinyint(4)	NO		0	Problem & Innovation (out of 10).
+technical_score	tinyint(4)	NO		0	Technical Feasibility & PoC (out of 10).
+business_score	tinyint(4)	NO		0	Market & Commercialization (out of 10).
+impact_score	tinyint(4)	NO		0	Societal / Industrial Impact (out of 10).
+presentation_score	tinyint(4)	NO		0	Team Capability & Presentation (out of 10).
+total_score	tinyint(4)	YES	STORED GENERATED	NULL	Sum of all 5 scores (out of 50).
+qualified_for_grant	tinyint(1)	YES	STORED GENERATED	NULL	Generated flag: 1 if total_score >= 35.
+remarks	text	YES		NULL	Evaluator feedback notes.
+evaluated_at	timestamp	NO		current_timestamp()	Evaluation timestamp.
+Table 8: registration_alerts
+
+Captures pre-registration expressions of interest from landing page subscribers.
+
+Column	Type	Nullable	Key / Extra	Default	Description
+id	int(11)	NO	PRI (auto_increment)	None	Primary key.
+full_name	varchar(150)	NO		None	Student/Faculty subscriber name.
+email	varchar(150)	NO	UNI	None	Unique contact email.
+phone	varchar(20)	YES		NULL	Mobile number.
+department	varchar(100)	NO		None	Department.
+year_of_study	enum(...)	NO		None	'II', 'III', 'Final', 'Faculty', 'Other'.
+interest_role	enum(...)	YES		'Team Lead'	'Team Lead', 'Team Member', 'Faculty Mentor', 'Observer'.
+created_at	timestamp	NO		current_timestamp()	Subscription timestamp.

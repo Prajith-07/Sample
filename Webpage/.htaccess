@@ -1,0 +1,2 @@
+# Set register.php as the default entry point
+DirectoryIndex register.php
