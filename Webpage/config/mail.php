@@ -30,19 +30,24 @@ return [
     // Dynamic Base URL Resolver for Approval Links
     'get_base_url'   => function (): string {
         $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $host   = $_SERVER['HTTP_HOST'] ?? '127.0.0.1:8000';
         $script = $_SERVER['SCRIPT_NAME'] ?? '';
         
-        // Check if running in subfolder like /itech_seed/ or /Webpage/
-        $dir = dirname($script);
-        if ($dir === '/' || $dir === '\\') {
+        // Normalize CLI or subfolder path
+        if (preg_match('/^[a-zA-Z]:/i', $script)) {
             $dir = '';
-        }
-        // Normalize slashes
-        $dir = str_replace('\\', '/', $dir);
-        // If script is in /api/ or similar subfolder, go up to webroot
-        if (basename($dir) === 'api') {
-            $dir = dirname($dir);
+        } else {
+            $dir = dirname($script);
+            if ($dir === '/' || $dir === '\\' || $dir === '.') {
+                $dir = '';
+            }
+            $dir = str_replace('\\', '/', $dir);
+            if (basename($dir) === 'api') {
+                $dir = dirname($dir);
+            }
+            if ($dir === '/' || $dir === '.') {
+                $dir = '';
+            }
         }
         return rtrim("{$scheme}://{$host}{$dir}", '/');
     }

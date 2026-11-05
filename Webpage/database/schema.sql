@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS `teams` (
     `has_woman_member` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 if at least one woman member exists',
     `current_step` TINYINT NOT NULL DEFAULT 1 COMMENT 'Current wizard step (1 to 7)',
     `status` ENUM('Draft', 'Submitted', 'Under Screening', 'Shortlisted', 'Pitch Day', 'Sanctioned', 'Rejected') DEFAULT 'Draft',
+    `reset_token` VARCHAR(64) DEFAULT NULL,
+    `reset_token_expires` DATETIME DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

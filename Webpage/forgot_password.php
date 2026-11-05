@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $userType = null; // 'student' or 'mentor'
 
             // 1. Look in team_members
-            $stmtM = $pdo->prepare("SELECT id, full_name, college_email, phone_number FROM `team_members` WHERE LOWER(college_email) = :email LIMIT 1");
+            $stmtM = $pdo->prepare("SELECT id, team_id, is_lead, full_name, college_email, phone_number FROM `team_members` WHERE LOWER(college_email) = :email LIMIT 1");
             $stmtM->execute([':email' => $email]);
             $student = $stmtM->fetch(PDO::FETCH_ASSOC);
 
@@ -37,13 +37,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userType = 'student';
             } else {
                 // 2. Look in team_mentors
-                $stmtMen = $pdo->prepare("SELECT id, name AS full_name, email, phone AS phone_number FROM `team_mentors` WHERE LOWER(email) = :email LIMIT 1");
+                $stmtMen = $pdo->prepare("SELECT id, team_id, name AS full_name, email, phone AS phone_number FROM `team_mentors` WHERE LOWER(email) = :email LIMIT 1");
                 $stmtMen->execute([':email' => $email]);
                 $mentor = $stmtMen->fetch(PDO::FETCH_ASSOC);
 
                 if ($mentor) {
                     $userFound = $mentor;
                     $userType = 'mentor';
+                } else {
+                    // 3. Fallback: Look in teams for leader_email
+                    $stmtLead = $pdo->prepare("SELECT id, leader_email AS email, team_name FROM `teams` WHERE LOWER(leader_email) = :email LIMIT 1");
+                    $stmtLead->execute([':email' => $email]);
+                    $teamLead = $stmtLead->fetch(PDO::FETCH_ASSOC);
+                    if ($teamLead) {
+                        $userFound = [
+                            'id' => $teamLead['id'],
+                            'team_id' => $teamLead['id'],
+                            'full_name' => 'Team Leader (' . $teamLead['team_name'] . ')',
+                            'email' => $teamLead['email'],
+                            'phone_number' => ''
+                        ];
+                        $userType = 'team_lead';
+                    }
                 }
             }
 
@@ -54,9 +69,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($userType === 'mentor') {
                     $stmtUp = $pdo->prepare("UPDATE `team_mentors` SET reset_token = :token, reset_token_expires = :exp WHERE id = :id");
                     $stmtUp->execute([':token' => $token, ':exp' => $expires, ':id' => $userFound['id']]);
+                } elseif ($userType === 'team_lead') {
+                    $stmtUp = $pdo->prepare("UPDATE `teams` SET reset_token = :token, reset_token_expires = :exp WHERE id = :id");
+                    $stmtUp->execute([':token' => $token, ':exp' => $expires, ':id' => $userFound['id']]);
+                    // Also update team_members lead row if exists
+                    $pdo->prepare("UPDATE `team_members` SET reset_token = :token, reset_token_expires = :exp WHERE team_id = :tid AND is_lead = 1")->execute([':token' => $token, ':exp' => $expires, ':tid' => $userFound['id']]);
                 } else {
                     $stmtUp = $pdo->prepare("UPDATE `team_members` SET reset_token = :token, reset_token_expires = :exp WHERE id = :id");
                     $stmtUp->execute([':token' => $token, ':exp' => $expires, ':id' => $userFound['id']]);
+                    // If this member is the team lead, also update teams table
+                    if (!empty($userFound['is_lead']) && !empty($userFound['team_id'])) {
+                        $pdo->prepare("UPDATE `teams` SET reset_token = :token, reset_token_expires = :exp WHERE id = :tid")->execute([':token' => $token, ':exp' => $expires, ':tid' => $userFound['team_id']]);
+                    }
                 }
 
                 // Send email with reset link

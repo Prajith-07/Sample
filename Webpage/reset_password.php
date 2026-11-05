@@ -23,7 +23,7 @@ $userType = null; // 'student' or 'mentor'
 if ($pdo) {
     // 1. Look in team_members
     $stmtM = $pdo->prepare("
-        SELECT id, full_name, college_email AS email, phone_number, reset_token_expires 
+        SELECT id, team_id, is_lead, full_name, college_email AS email, phone_number, reset_token_expires 
         FROM `team_members` 
         WHERE reset_token = :token AND reset_token_expires > NOW() 
         LIMIT 1
@@ -37,7 +37,7 @@ if ($pdo) {
     } else {
         // 2. Look in team_mentors
         $stmtMen = $pdo->prepare("
-            SELECT id, name AS full_name, email, phone AS phone_number, reset_token_expires 
+            SELECT id, team_id, name AS full_name, email, phone AS phone_number, reset_token_expires 
             FROM `team_mentors` 
             WHERE reset_token = :token AND reset_token_expires > NOW() 
             LIMIT 1
@@ -48,6 +48,20 @@ if ($pdo) {
         if ($mentor) {
             $validUser = $mentor;
             $userType = 'mentor';
+        } else {
+            // 3. Fallback: Look in teams for leader reset
+            $stmtTeam = $pdo->prepare("
+                SELECT id, id AS team_id, 1 AS is_lead, team_name AS full_name, leader_email AS email, '' AS phone_number, reset_token_expires 
+                FROM `teams` 
+                WHERE reset_token = :token AND reset_token_expires > NOW() 
+                LIMIT 1
+            ");
+            $stmtTeam->execute([':token' => $token]);
+            $teamRow = $stmtTeam->fetch(PDO::FETCH_ASSOC);
+            if ($teamRow) {
+                $validUser = $teamRow;
+                $userType = 'team_lead';
+            }
         }
     }
 }
@@ -102,6 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validUser) {
                     WHERE `id` = :id
                 ");
                 $stmtUp->execute([':hash' => $newHash, ':id' => $validUser['id']]);
+            } elseif ($userType === 'team_lead') {
+                $stmtUp = $pdo->prepare("
+                    UPDATE `teams` 
+                    SET `password_hash` = :hash, `reset_token` = NULL, `reset_token_expires` = NULL 
+                    WHERE `id` = :id
+                ");
+                $stmtUp->execute([':hash' => $newHash, ':id' => $validUser['id']]);
+                // Also update team_members lead row
+                $pdo->prepare("UPDATE `team_members` SET `password_hash` = :hash, `is_dummy_password` = 0, `reset_token` = NULL, `reset_token_expires` = NULL WHERE `team_id` = :tid AND `is_lead` = 1")->execute([':hash' => $newHash, ':tid' => $validUser['id']]);
             } else {
                 $stmtUp = $pdo->prepare("
                     UPDATE `team_members` 
@@ -109,6 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validUser) {
                     WHERE `id` = :id
                 ");
                 $stmtUp->execute([':hash' => $newHash, ':id' => $validUser['id']]);
+                // If member is team lead, update teams table as well
+                if (!empty($validUser['is_lead']) && !empty($validUser['team_id'])) {
+                    $pdo->prepare("UPDATE `teams` SET `password_hash` = :hash, `reset_token` = NULL, `reset_token_expires` = NULL WHERE `id` = :tid")->execute([':hash' => $newHash, ':tid' => $validUser['team_id']]);
+                }
             }
 
             header("Location: login.php?password_reset=1");
