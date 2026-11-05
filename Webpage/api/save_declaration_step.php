@@ -7,12 +7,25 @@
 
 declare(strict_types=1);
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method Not Allowed. Use POST.']);
+    exit;
+}
+
+if (isset($_SESSION['is_lead']) && $_SESSION['is_lead'] === false) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Only the designated Team Leader has authority to submit the final declaration.'
+    ]);
     exit;
 }
 

@@ -4,12 +4,25 @@
  * iTech Seed Grand Challenge 2027
  * PSG iTech Launchpad: Innozone & Startupzone
  */
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+    exit;
+}
+
+if (isset($_SESSION['is_lead']) && $_SESSION['is_lead'] === false) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Only the designated Team Leader has authority to modify or save budget items.'
+    ]);
     exit;
 }
 

@@ -122,6 +122,65 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
         error_log("Lookup error: " . $e->getMessage());
     }
 }
+
+// Determine whether a given step has been completed by the team leader
+if (!function_exists('isStepCompletedByLeader')) {
+    function isStepCompletedByLeader(int $stepNum, mixed $team, array $members, mixed $proposal, array $milestones, array $budgetItems): bool {
+        $team = is_array($team) ? $team : null;
+        $proposal = is_array($proposal) ? $proposal : null;
+        if (!$team) {
+            return false;
+        }
+        if ($team['status'] === 'Submitted' || $team['status'] === 'Under Screening') {
+            return true;
+        }
+        $curr = (int)($team['current_step'] ?? 1);
+        
+        switch ($stepNum) {
+            case 1:
+                // Step 1 is done if leader advanced past step 1 OR has saved at least 2 team members
+                return ($curr > 1) || (count($members) >= 2 && !empty($team['team_name']));
+            case 2:
+                // Step 2 is done if leader advanced past step 2 OR proposal has title & problem
+                return ($curr > 2) || (!empty($proposal['project_title']) && !empty($proposal['problem_statement']));
+            case 3:
+                // Step 3 is done if leader advanced past step 3 OR proposal has trl_level
+                return ($curr > 3) || (!empty($proposal['trl_level']));
+            case 4:
+                // Step 4 is done if leader advanced past step 4 OR milestones are saved
+                return ($curr > 4) || (!empty($milestones) && count($milestones) >= 6);
+            case 5:
+                // Step 5 is done if leader advanced past step 5 OR budget items exist
+                return ($curr > 5) || (!empty($budgetItems));
+            case 6:
+                // Step 6 is done if leader advanced past step 6 OR target_market exists
+                return ($curr > 6) || (!empty($proposal['target_market']));
+            case 7:
+                return ($team['status'] === 'Submitted');
+            default:
+                return false;
+        }
+    }
+}
+
+$milestonesList = $existingMilestones ?? [];
+$budgetList = $existingBudgetItems ?? [];
+
+$highestCompletedStep = 0;
+for ($s = 1; $s <= 7; $s++) {
+    if (isStepCompletedByLeader($s, $existingTeam, $existingMembers, $existingProposal, $milestonesList, $budgetList)) {
+        $highestCompletedStep = $s;
+    }
+}
+
+$isCurrentStepCompleted = isStepCompletedByLeader(
+    $currentStep,
+    $existingTeam,
+    $existingMembers,
+    $existingProposal,
+    $milestonesList,
+    $budgetList
+);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -308,15 +367,28 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
         <div class="step-dock-pill">
           <?php foreach ($stepsConfig as $stepNum => $cfg): 
             $isActive    = ($currentStep === $stepNum);
-            $isCompleted = ($currentStep > $stepNum && $existingTeam);
-            $itemClass   = 'step-dock-item' . ($isActive ? ' step-dock-active' : ($isCompleted ? ' step-dock-completed' : ' step-dock-pending'));
-            $linkUrl     = ($isCompleted) ? "register.php?step={$stepNum}&team_id=" . (int)$existingTeam['id'] : null;
+            $isStepDone  = isStepCompletedByLeader($stepNum, $existingTeam, $existingMembers, $existingProposal, $milestonesList, $budgetList);
+            $itemClass   = 'step-dock-item' . ($isActive ? ' step-dock-active' : ($isStepDone ? ' step-dock-completed' : ' step-dock-pending'));
+            
+            // Leader can navigate to any completed step OR to their current working step
+            // Team member can navigate to any step (completed steps show details, incomplete steps show the pending message)
+            $canNavigate = false;
+            if ($existingTeam) {
+                if ($isLeader) {
+                    $canNavigate = ($isStepDone || $stepNum <= max(1, (int)$existingTeam['current_step']));
+                } else {
+                    $canNavigate = true;
+                }
+            }
+            $linkUrl = ($canNavigate && $existingTeam) ? "register.php?step={$stepNum}&team_id=" . (int)$existingTeam['id'] : null;
           ?>
             <?php if ($linkUrl): ?>
-              <a href="<?= htmlspecialchars($linkUrl) ?>" class="<?= $itemClass ?>" title="Review <?= htmlspecialchars($cfg['title']) ?>">
+              <a href="<?= htmlspecialchars($linkUrl) ?>" class="<?= $itemClass ?>" title="<?= $isStepDone ? 'Review ' : ($isLeader ? 'Edit ' : 'Status of ') ?><?= htmlspecialchars($cfg['title']) ?>">
                 <span class="step-dock-icon-wrap">
                   <?= $cfg['icon'] ?>
-                  <span class="step-dock-check-badge">✓</span>
+                  <?php if ($isStepDone): ?>
+                    <span class="step-dock-check-badge">✓</span>
+                  <?php endif; ?>
                 </span>
                 <span class="step-dock-label"><?= htmlspecialchars($cfg['title']) ?></span>
               </a>
@@ -324,7 +396,7 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
               <div class="<?= $itemClass ?>">
                 <span class="step-dock-icon-wrap">
                   <?= $cfg['icon'] ?>
-                  <?php if ($isCompleted): ?>
+                  <?php if ($isStepDone): ?>
                     <span class="step-dock-check-badge">✓</span>
                   <?php endif; ?>
                 </span>
@@ -335,11 +407,41 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
         </div>
       </nav>
 
+      <!-- ==================================================================
+           UNFINISHED STEP NOTICE FOR TEAM MEMBERS (VIEW-ONLY)
+           ================================================================== -->
+      <?php if (!$isLeader && !$isCurrentStepCompleted): ?>
+
+        <div class="glass-panel" style="text-align: center; padding: 4rem 2rem; margin: 1.5rem auto 3rem; max-width: 680px; border: 1px solid rgba(245, 158, 11, 0.35); background: var(--bg-card, rgba(255, 255, 255, 0.95)); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+          <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); color: #d97706; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <h2 style="font-family: var(--font-heading, 'Syne', sans-serif); font-size: 1.65rem; color: var(--text-forest, #15803d); margin-bottom: 0.75rem;">
+            The team leader has not yet finished this step.
+          </h2>
+          <p style="color: var(--text-body, #475569); max-width: 520px; margin: 0 auto 2rem; font-size: 1rem; line-height: 1.6;">
+            This step (<strong><?= htmlspecialchars($stepsConfig[$currentStep]['title'] ?? "Step {$currentStep}") ?></strong>) is currently in progress. Your Team Leader has not saved this section yet. As soon as the team leader completes and saves this step, the details will be visible here for your review.
+          </p>
+          <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <?php if ($highestCompletedStep >= 1): ?>
+              <a href="register.php?step=<?= $highestCompletedStep ?>&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <span>View Step <?= $highestCompletedStep ?>: <?= htmlspecialchars($stepsConfig[$highestCompletedStep]['title']) ?></span>
+              </a>
+            <?php endif; ?>
+            <a href="register.php?step=1&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-back-home" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <span>Step 1: Team & Accounts</span>
+            </a>
+          </div>
+        </div>
 
       <!-- ==================================================================
            STEP 7: DECLARATION & ONLINE MENTOR APPROVAL VIEW
            ================================================================== -->
-      <?php if ($currentStep === 7): ?>
+      <?php elseif ($currentStep === 7): ?>
 
         <?php if (!$existingTeam): ?>
           <div class="glass-panel" style="text-align: center; padding: 3.5rem 2rem;">
@@ -519,20 +621,26 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
               </a>
 
               <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <button type="submit" id="declarationSubmitBtn" class="btn-save-step" style="padding: 0.85rem 1.8rem; background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);">
-                  <span><?= !empty($existingProposal['lead_signature_name']) ? 'Update Declaration &amp; Dispatch' : 'Submit Declaration &amp; Dispatch Mentor Links' ?></span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-
-                <?php if ($allMentorsApproved): ?>
-                  <a href="registration_success.php?team_id=<?= (int)$existingTeam['id'] ?>" id="btnFinishRegistrationMain" class="btn-finish-registration">
-                    <span>Finish Registration</span>
+                <?php if ($isLeader): ?>
+                  <button type="submit" id="declarationSubmitBtn" class="btn-save-step" style="padding: 0.85rem 1.8rem; background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);">
+                    <span><?= !empty($existingProposal['lead_signature_name']) ? 'Update Declaration &amp; Dispatch' : 'Submit Declaration &amp; Dispatch Mentor Links' ?></span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                  </a>
-                <?php else: ?>
-                  <button type="button" disabled title="The Finish Registration button will activate once both Faculty and Industry mentors approve" style="opacity: 0.6; cursor: not-allowed; background: #64748b; color: #ffffff; padding: 0.85rem 1.8rem; border-radius: 9999px; font-weight: 700; border: none; font-size: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-                    <span>Finish Registration (Mentors Pending)</span>
                   </button>
+
+                  <?php if ($allMentorsApproved): ?>
+                    <a href="registration_success.php?team_id=<?= (int)$existingTeam['id'] ?>" id="btnFinishRegistrationMain" class="btn-finish-registration">
+                      <span>Finish Registration</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </a>
+                  <?php else: ?>
+                    <button type="button" disabled title="The Finish Registration button will activate once both Faculty and Industry mentors approve" style="opacity: 0.6; cursor: not-allowed; background: #64748b; color: #ffffff; padding: 0.85rem 1.8rem; border-radius: 9999px; font-weight: 700; border: none; font-size: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                      <span>Finish Registration (Mentors Pending)</span>
+                    </button>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <div style="font-size: 0.92rem; font-weight: 600; color: #15803d; background: rgba(21,128,61,0.1); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(21,128,61,0.3);">
+                    View-Only: Team Leader Submits Final Declaration
+                  </div>
                 <?php endif; ?>
               </div>
             </div>
@@ -709,6 +817,15 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
           <!-- Step 6 Alert Box -->
           <div id="marketAlertBox" style="display: none; margin-bottom: 1.5rem;"></div>
 
+          <?php if (!$isLeader): ?>
+            <div class="team-member-view-banner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.75rem; line-height: 1.45;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>
+                <strong>View-Only Mode (Team Member):</strong> This step has been completed by your Team Leader. You can view all saved information below. Only the <strong>Team Leader</strong> has authority to make edits.
+              </div>
+            </div>
+          <?php endif; ?>
+
           <!-- Form: Market & Impact -->
           <form id="marketForm" novalidate>
             <input type="hidden" name="team_id" value="<?= (int)$existingTeam['id'] ?>">
@@ -882,10 +999,17 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 Back to Step 5: Budget
               </a>
-              <button type="submit" id="marketSubmitBtn" class="btn-save-step">
-                <span>Save &amp; Continue to Step 7</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
+              <?php if ($isLeader): ?>
+                <button type="submit" id="marketSubmitBtn" class="btn-save-step">
+                  <span>Save &amp; Continue to Step 7</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              <?php else: ?>
+                <a href="register.php?step=7&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                  <span>View Step 7: Declaration</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+              <?php endif; ?>
             </div>
           </form>
 
@@ -909,6 +1033,15 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
             </a>
           </div>
         <?php else: ?>
+
+          <?php if (!$isLeader): ?>
+            <div class="team-member-view-banner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.75rem; line-height: 1.45;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>
+                <strong>View-Only Mode (Team Member):</strong> This step has been completed by your Team Leader. You can view all saved information below. Only the <strong>Team Leader</strong> has authority to make edits.
+              </div>
+            </div>
+          <?php endif; ?>
 
           <form id="budgetForm" novalidate>
             <input type="hidden" id="teamIdInput" name="team_id" value="<?= (int)$existingTeam['id'] ?>">
@@ -1124,10 +1257,17 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 Back to Step 4: Milestones
               </a>
 
-              <button type="submit" id="budgetSubmitBtn" class="btn-save-step">
-                <span>Save & Continue to Step 6</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
+              <?php if ($isLeader): ?>
+                <button type="submit" id="budgetSubmitBtn" class="btn-save-step">
+                  <span>Save & Continue to Step 6</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              <?php else: ?>
+                <a href="register.php?step=6&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                  <span>View Step 6: Market & Impact</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+              <?php endif; ?>
             </div>
           </form>
 
@@ -1151,6 +1291,15 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
             </a>
           </div>
         <?php else: ?>
+
+          <?php if (!$isLeader): ?>
+            <div class="team-member-view-banner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.75rem; line-height: 1.45;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>
+                <strong>View-Only Mode (Team Member):</strong> This step has been completed by your Team Leader. You can view all saved information below. Only the <strong>Team Leader</strong> has authority to make edits.
+              </div>
+            </div>
+          <?php endif; ?>
 
           <form id="pocPlanForm" novalidate>
             <input type="hidden" id="teamIdInput" name="team_id" value="<?= (int)$existingTeam['id'] ?>">
@@ -1406,10 +1555,17 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 Back to Step 3: Readiness
               </a>
 
-              <button type="submit" id="pocSubmitBtn" class="btn-save-step">
-                <span>Save & Continue to Step 5</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
+              <?php if ($isLeader): ?>
+                <button type="submit" id="pocSubmitBtn" class="btn-save-step">
+                  <span>Save & Continue to Step 5</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              <?php else: ?>
+                <a href="register.php?step=5&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                  <span>View Step 5: Budget</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+              <?php endif; ?>
             </div>
           </form>
 
@@ -1452,6 +1608,15 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
 
           <!-- Step 3 Form Alert Box -->
           <div id="readinessAlertBox" class="form-alert-banner" style="display: none;"></div>
+
+          <?php if (!$isLeader): ?>
+            <div class="team-member-view-banner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.75rem; line-height: 1.45;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>
+                <strong>View-Only Mode (Team Member):</strong> This step has been completed by your Team Leader. You can view all saved information below. Only the <strong>Team Leader</strong> has authority to make edits.
+              </div>
+            </div>
+          <?php endif; ?>
 
           <!-- Form: Readiness -->
           <form id="readinessRegistrationForm" novalidate>
@@ -1649,10 +1814,17 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 Back to Step 2: The Idea
               </a>
 
-              <button type="submit" id="saveReadinessBtn" class="btn-save-step">
-                <span>Save & Continue to Step 4</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
+              <?php if ($isLeader): ?>
+                <button type="submit" id="saveReadinessBtn" class="btn-save-step">
+                  <span>Save & Continue to Step 4</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              <?php else: ?>
+                <a href="register.php?step=4&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                  <span>View Step 4: PoC Milestones</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+              <?php endif; ?>
             </div>
 
           </form>
@@ -1689,13 +1861,22 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
             <div class="team-context-right">
               <span class="app-ref-badge">App Ref: <?= htmlspecialchars($existingTeam['application_no']) ?></span>
               <a href="register.php?step=1&team_id=<?= (int)$existingTeam['id'] ?>" style="font-size: 0.85rem; color: var(--clover-green); font-weight: 600; text-decoration: none;">
-                Edit Team Info
+                <?= $isLeader ? 'Edit Team Info' : 'View Team Info' ?>
               </a>
             </div>
           </div>
 
           <!-- Step 2 Form Alert Box -->
           <div id="ideaAlertBox" class="form-alert-banner" style="display: none;"></div>
+
+          <?php if (!$isLeader): ?>
+            <div class="team-member-view-banner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.75rem; line-height: 1.45;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>
+                <strong>View-Only Mode (Team Member):</strong> This step has been completed by your Team Leader. You can view all saved information below. Only the <strong>Team Leader</strong> has authority to make edits.
+              </div>
+            </div>
+          <?php endif; ?>
 
           <!-- Form: The Idea -->
           <form id="ideaRegistrationForm" novalidate>
@@ -1887,10 +2068,17 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 Back to Step 1: Team & Accounts
               </a>
 
-              <button type="submit" id="saveIdeaBtn" class="btn-save-step">
-                <span>Save & Continue to Step 3</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
+              <?php if ($isLeader): ?>
+                <button type="submit" id="saveIdeaBtn" class="btn-save-step">
+                  <span>Save & Continue to Step 3</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              <?php else: ?>
+                <a href="register.php?step=3&team_id=<?= (int)$existingTeam['id'] ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                  <span>View Step 3: Readiness & TRL</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </a>
+              <?php endif; ?>
             </div>
 
           </form>
@@ -2141,10 +2329,17 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
               View Submissions Directory
             </a>
 
-            <button type="submit" id="saveContinueBtn" class="btn-save-step">
-              <span>Save & Continue to Step 2</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
+            <?php if ($isLeader): ?>
+              <button type="submit" id="saveContinueBtn" class="btn-save-step">
+                <span>Save & Continue to Step 2</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            <?php else: ?>
+              <a href="register.php?step=2&team_id=<?= $existingTeam ? (int)$existingTeam['id'] : 0 ?>" class="btn-save-step" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <span>View Step 2: The Idea</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            <?php endif; ?>
           </div>
 
         </form>
@@ -2162,6 +2357,11 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
 
   </div>
 
+  <script>
+    window.isTeamLead = <?= json_encode($isLeader) ?>;
+    window.isCurrentStepCompleted = <?= json_encode($isCurrentStepCompleted) ?>;
+  </script>
+
   <?php if ($currentStep === 7): ?>
     <script src="js/declaration_step.js?v=<?= filemtime(__DIR__ . '/js/declaration_step.js') ?>"></script>
   <?php elseif ($currentStep === 6): ?>
@@ -2178,9 +2378,25 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
     <script>
       window.stagedLeaderEmail = <?= json_encode($stagedLeaderEmail) ?>;
       window.existingMembers = <?= json_encode($existingMembers ?: []) ?>;
-      window.isTeamLead = <?= json_encode($isLeader) ?>;
     </script>
     <script src="js/registration.js?v=<?= filemtime(__DIR__ . '/js/registration.js') ?>"></script>
+  <?php endif; ?>
+
+  <?php if (!$isLeader): ?>
+    <script>
+      (() => {
+        document.body.classList.add('team-member-viewonly');
+        // Ensure all inputs, selects, and textareas across this step are strictly read-only and disabled
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+          el.setAttribute('disabled', 'disabled');
+          el.setAttribute('readonly', 'readonly');
+        });
+        // Hide dynamic add/remove buttons so no edit option is visible
+        document.querySelectorAll('.btn-add-member, .btn-remove-member, #addBudgetRowBtn, #clearBudgetBtn, .budget-remove-row, .mentor-change-btn').forEach(btn => {
+          btn.style.display = 'none';
+        });
+      })();
+    </script>
   <?php endif; ?>
 
   <!-- Theme Toggle Controller -->

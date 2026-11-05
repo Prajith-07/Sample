@@ -28,6 +28,9 @@ if (!empty($_SESSION['team_id']) && !isset($_GET['reauth'])) {
         $tm = $stmt->fetch();
         if ($tm) {
             $step = max(1, (int)$tm['current_step']);
+            if (empty($_SESSION['is_lead']) && $step > 1) {
+                $step = $step - 1;
+            }
             if ($tm['status'] === 'Submitted' || $tm['status'] === 'Under Screening') {
                 header("Location: registration_success.php?team_id={$tid}");
                 exit;
@@ -183,6 +186,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Student team member or leader
                 $targetStep = max(1, (int)($userRecord['current_step'] ?? 1));
+                if (!$isLeader && $targetStep > 1) {
+                    $targetStep = $targetStep - 1;
+                }
                 $teamStatus = $userRecord['status'] ?? 'Draft';
 
                 if ($teamStatus === 'Submitted' || $teamStatus === 'Under Screening') {
