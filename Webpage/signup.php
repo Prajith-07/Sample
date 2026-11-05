@@ -97,10 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 $newTeamId = (int)$pdo->lastInsertId();
 
-                // Insert initial team_member record for the Team Leader
+                // Insert initial team_member record for the Team Leader (roll_number and phone_number must be NULL until Step 1 is saved)
                 $stmtLeadMem = $pdo->prepare("
                     INSERT INTO `team_members` (`team_id`, `is_lead`, `member_order`, `full_name`, `roll_number`, `department`, `year_of_study`, `college_email`, `phone_number`, `gender`, `password_hash`, `is_dummy_password`)
-                    VALUES (:tid, 1, 1, '', '', '', 'II', :email, '', 'Male', :phash, 0)
+                    VALUES (:tid, 1, 1, NULL, NULL, NULL, 'II', :email, NULL, 'Male', :phash, 0)
                 ");
                 $stmtLeadMem->execute([
                     ':tid'   => $newTeamId,
