@@ -63,6 +63,23 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 }
             }
 
+            // Always re-verify leader status from DB against logged in email (for new & existing members)
+            $userEmail = strtolower(trim((string)($_SESSION['user_email'] ?? '')));
+            if (!empty($userEmail)) {
+                if (strtolower(trim($existingTeam['leader_email'] ?? '')) === $userEmail) {
+                    $isLeader = true;
+                    $_SESSION['is_lead'] = true;
+                } else {
+                    foreach ($existingMembers as $m) {
+                        if (strtolower(trim($m['college_email'])) === $userEmail) {
+                            $isLeader = !empty($m['is_lead']);
+                            $_SESSION['is_lead'] = $isLeader;
+                            break;
+                        }
+                    }
+                }
+            }
+
             // Mentors
             $stmtMen = $pdo->prepare("SELECT * FROM `team_mentors` WHERE team_id = :tid");
             $stmtMen->execute([':tid' => $tId]);
