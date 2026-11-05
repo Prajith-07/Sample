@@ -5807,10 +5807,16 @@ button, a, input, select, textarea, label {
   }
 
   .form-input-grid,
+  .slot-grid-inputs,
   .hero-meta-grid,
   .dossier-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 1.15rem !important;
+  }
+
+  .member-slot-card,
+  .mentor-card {
+    padding: 1.5rem !important;
   }
 }
 
@@ -5969,6 +5975,183 @@ button, a, input, select, textarea, label {
   .step-dock-label {
     font-size: 0.74rem !important;
     font-weight: 600 !important;
+  }
+
+  /* ==========================================================================
+     STEP 1: TEAM & ACCOUNT REGISTRATION MOBILE SUITE
+     ========================================================================== */
+  /* Remove nested double-padding blowout */
+  .portal-container > .glass-panel {
+    padding: 1.15rem 0.85rem !important;
+    border-radius: 16px !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .glass-panel .glass-panel,
+  .glass-panel .member-slot-card,
+  .glass-panel .mentor-card {
+    padding: 1.1rem 0.85rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 14px !important;
+  }
+
+  /* Force single column for all member & mentor input grids on mobile */
+  .slot-grid-inputs {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.9rem !important;
+  }
+
+  .slot-grid-inputs .form-group {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .slot-grid-inputs .nature-input,
+  .form-group .nature-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Diversity Status Banner & Member Counter */
+  .diversity-status-wrapper {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .diversity-status-wrapper > div {
+    width: 100% !important;
+  }
+
+  .diversity-pill {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: flex-start !important;
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.82rem !important;
+    border-radius: 12px !important;
+    line-height: 1.35 !important;
+  }
+
+  .team-size-counter-badge {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    padding: 0.5rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 10px !important;
+  }
+
+  /* Slot Card Headers */
+  .slot-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.75rem !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  }
+
+  :root[data-theme="dark"] .slot-card-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .slot-header-left {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .slot-header-right {
+    width: 100% !important;
+  }
+
+  .btn-remove-member {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.55rem 1rem !important;
+    min-height: 40px !important;
+  }
+
+  .member-role-title {
+    font-size: 1.05rem !important;
+    flex-wrap: wrap !important;
+  }
+
+  .badge-pill-lead {
+    font-size: 0.68rem !important;
+    padding: 0.15rem 0.5rem !important;
+  }
+
+  .lead-info-tag {
+    display: inline-block !important;
+    width: 100% !important;
+    text-align: center !important;
+    padding: 0.45rem !important;
+  }
+
+  /* Section Heading Rows */
+  .section-heading-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.35rem !important;
+    margin-bottom: 1.15rem !important;
+    padding-bottom: 0.65rem !important;
+  }
+
+  .section-title {
+    font-size: 1.25rem !important;
+  }
+
+  .section-hint {
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Add Member & Toggle Mentor Buttons */
+  .add-member-area {
+    width: 100% !important;
+    margin-top: 1rem !important;
+  }
+
+  .btn-add-member {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 48px !important;
+    padding: 0.85rem 1rem !important;
+    font-size: 0.95rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .btn-toggle-optional {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 46px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .mentors-grid {
+    gap: 1.25rem !important;
+  }
+
+  .mentor-badge {
+    font-size: 0.72rem !important;
+    padding: 0.2rem 0.6rem !important;
   }
 
   /* Form Panels & Cards */
