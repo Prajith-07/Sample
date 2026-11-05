@@ -4,6 +4,10 @@
  * Returns JSON: { available: bool, message: string }
  * iTech Seed Grand Challenge 2027
  */
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/db.php';
 
@@ -85,12 +89,26 @@ try {
             break;
 
         case 'college_email':
-            if (!preg_match('/^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$/i', $value)) {
+            if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
                 echo json_encode([
                     'available' => false,
-                    'message' => "College email must end strictly with @psgitech.ac.in."
+                    'message' => "Please enter a valid email address."
                 ]);
                 break;
+            }
+
+            // If the email being checked is the current logged-in or staged Team Leader's email, it's their own account
+            $isCurrentLeaderEmail = false;
+            $checkEmail = strtolower(trim($value));
+            if (!empty($_SESSION['staged_lead_email']) && strtolower(trim($_SESSION['staged_lead_email'])) === $checkEmail) {
+                $isCurrentLeaderEmail = true;
+            } elseif (!empty($_SESSION['user_email']) && strtolower(trim($_SESSION['user_email'])) === $checkEmail && !empty($_SESSION['is_lead'])) {
+                $isCurrentLeaderEmail = true;
+            }
+
+            if ($isCurrentLeaderEmail) {
+                echo json_encode(['available' => true, 'message' => "Team Leader email verified."]);
+                exit;
             }
 
             // Check if registered as team lead in teams table
@@ -140,7 +158,11 @@ try {
                 exit;
             }
 
-            echo json_encode(['available' => true, 'message' => "Email is available."]);
+            $isLeadCheck = isset($_REQUEST['is_lead']) && ($_REQUEST['is_lead'] == '1' || $_REQUEST['is_lead'] === 'true');
+            echo json_encode([
+                'available' => true, 
+                'message' => $isLeadCheck ? "Team Leader email verified." : "Email is available."
+            ]);
             break;
 
         case 'phone_number':

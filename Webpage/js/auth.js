@@ -38,7 +38,7 @@
                 clearTimeout(emailDebounceTimer);
                 const emailVal = leadEmailInput.value.trim().toLowerCase();
 
-                if (!emailVal || !emailVal.endsWith('@psgitech.ac.in')) {
+                if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
                     feedbackEl.style.display = 'none';
                     emailAvailable = true;
                     checkFormValidity();

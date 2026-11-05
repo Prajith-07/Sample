@@ -39,8 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $authError = "Please fill in all required fields.";
     } elseif (!filter_var($leaderEmail, FILTER_VALIDATE_EMAIL)) {
         $authError = "Please enter a valid email address.";
-    } elseif (!str_ends_with($leaderEmail, '@psgitech.ac.in')) {
-        $authError = "Team Leader college email must end strictly with '@psgitech.ac.in'.";
     } elseif (strlen($password) < 6) {
         $authError = "Team password must be at least 6 characters in length.";
     } elseif ($password !== $confirmPassword) {
@@ -137,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="auth-card__content">
                     <p class="auth-eyebrow"><span class="auth-eyebrow__dot" aria-hidden="true"></span> PSG iTech · Seed Grant Challenge 2027</p>
                     <h1 id="auth-title">Create your team account</h1>
-                    <p class="auth-intro">Start with the team leader's official college email (@psgitech.ac.in). Your team can continue registration together after the first step.</p>
+                    <p class="auth-intro">Start with the team leader's email. Your team can continue registration together after the first step.</p>
 
                     <?php if (!empty($authError)): ?>
                         <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; padding: 0.85rem 1.15rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: flex-start; gap: 0.65rem; line-height: 1.45;">
@@ -148,8 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <form class="auth-form" method="POST" action="signup.php" data-auth-form>
                         <div class="auth-field">
-                            <label for="team-leader-email">Team Leader College Email</label>
-                            <input class="auth-input" id="team-leader-email" name="team_leader_email" type="email" autocomplete="email" placeholder="e.g. 23cs045@psgitech.ac.in" value="<?= htmlspecialchars($_POST['team_leader_email'] ?? '') ?>" required>
+                            <label for="team-leader-email">Team Leader Email</label>
+                            <input class="auth-input" id="team-leader-email" name="team_leader_email" type="email" autocomplete="email" placeholder="e.g. 23cs045@psgitech.ac.in or leader@gmail.com" value="<?= htmlspecialchars($_POST['team_leader_email'] ?? '') ?>" required>
                             <div id="email-duplicate-feedback" style="font-size: 0.83rem; margin-top: 0.35rem; display: none;"></div>
                         </div>
 

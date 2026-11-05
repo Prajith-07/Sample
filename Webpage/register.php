@@ -35,7 +35,7 @@ $existingMembers = [];
 $existingMentors = [];
 $existingProposal = null;
 $leadMember = null;
-$stagedLeaderEmail = $_SESSION['staged_lead_email'] ?? '';
+$stagedLeaderEmail = $_SESSION['staged_lead_email'] ?? ($_SESSION['user_email'] ?? '');
 
 if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
     try {
@@ -50,6 +50,9 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
 
         if ($existingTeam) {
             $tId = $existingTeam['id'];
+            if (empty($stagedLeaderEmail) && !empty($existingTeam['leader_email'])) {
+                $stagedLeaderEmail = $existingTeam['leader_email'];
+            }
             
             // Members
             $stmtM = $pdo->prepare("SELECT * FROM `team_members` WHERE team_id = :tid ORDER BY member_order ASC");

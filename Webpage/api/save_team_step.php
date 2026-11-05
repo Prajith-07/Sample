@@ -136,11 +136,9 @@ foreach ($members as $idx => $m) {
         $errors[] = "{$label}: Year of study must be II, III, or Final year.";
     }
 
-    // Email (must end only in @psgitech.ac.in)
+    // Email
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "{$label}: A valid college email address is required.";
-    } elseif (!preg_match('/^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$/i', $email)) {
-        $errors[] = "{$label}: College email must strictly end with @psgitech.ac.in.";
+        $errors[] = "{$label}: A valid email address is required.";
     } elseif (in_array($email, $seenEmails)) {
         $errors[] = "Duplicate Email detected: '{$email}' is entered more than once within your team.";
     } else {
@@ -219,7 +217,22 @@ if (empty($errors)) {
         if ($teamId > 0) $p[':tid'] = $teamId;
         $stmt->execute($p);
         if ($row = $stmt->fetch()) {
-            $errors[] = "College email '{$m['college_email']}' ({$label}) is already registered with team '{$row['team_name']}'.";
+            $errors[] = "Email '{$m['college_email']}' ({$label}) is already registered with team '{$row['team_name']}'.";
+        }
+
+        // Leader email cross-check against teams table
+        if (!empty($m['is_lead'])) {
+            $stmtLead = $pdo->prepare("
+                SELECT id, team_name 
+                FROM `teams` 
+                WHERE LOWER(TRIM(leader_email)) = :email " . ($teamId > 0 ? "AND id != :tid" : "")
+            );
+            $pLead = [':email' => $m['college_email']];
+            if ($teamId > 0) $pLead[':tid'] = $teamId;
+            $stmtLead->execute($pLead);
+            if ($rowL = $stmtLead->fetch()) {
+                $errors[] = "Leader email '{$m['college_email']}' is already registered with team '{$rowL['team_name']}'.";
+            }
         }
 
         // Phone check

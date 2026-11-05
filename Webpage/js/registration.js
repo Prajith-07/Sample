@@ -224,16 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
         </div>
 
-        <!-- College Email -->
+        <!-- Email Address -->
         <div class="form-group">
-          <label class="form-label">College Email (@psgitech.ac.in) <span class="req">*</span></label>
+          <label class="form-label">${isLead ? 'Team Leader Email' : 'Member Email'} <span class="req">*</span></label>
           <input type="email" data-field="college_email" name="members[${index}][college_email]" 
-                 class="nature-input member-email ajax-check" placeholder="username@psgitech.ac.in" 
-                 pattern="^[a-zA-Z0-9._%+-]+@psgitech\\.ac\\.in$" 
-                 ${(isLead && window.stagedLeaderEmail) ? `value="${window.stagedLeaderEmail}" readonly style="background:rgba(0,0,0,0.03); cursor:not-allowed;"` : ''}
+                 class="nature-input member-email ajax-check" 
+                 placeholder="${isLead ? 'e.g. yourname@gmail.com or college email' : 'e.g. member@psgitech.ac.in or gmail.com'}" 
+                 ${(isLead && window.stagedLeaderEmail) ? `value="${window.stagedLeaderEmail}"` : ''}
                  required>
           <div class="field-feedback"></div>
-          <span class="field-hint">${(isLead && window.stagedLeaderEmail) ? 'Verified Team Leader account email' : 'Must strictly end with @psgitech.ac.in'}</span>
+          <span class="field-hint">${isLead ? 'Official login & contact email for Team Leader' : 'College or active email'}</span>
         </div>
 
         <!-- Phone Number -->
@@ -311,6 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      const isLeadSlot = (input.closest('.member-slot-card')?.getAttribute('data-order') === '1');
+
       // Check for internal duplicate within current form first
       if (fieldName === 'roll_number' || fieldName === 'college_email' || fieldName === 'phone_number') {
         const allSameFields = Array.from(membersContainer.querySelectorAll(`input[data-field="${fieldName}"]`));
@@ -329,9 +331,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (fieldName === 'college_email') {
-        if (!/^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$/i.test(val)) {
-          showFeedback(input, feedbackEl, false, 'College email must end strictly with @psgitech.ac.in');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          showFeedback(input, feedbackEl, false, 'Please enter a valid email address.');
           return;
+        }
+
+        // Team Leader slot: verify against leader's staged signup email
+        if (isLeadSlot) {
+          if (window.stagedLeaderEmail && val.toLowerCase() === window.stagedLeaderEmail.toLowerCase()) {
+            showFeedback(input, feedbackEl, true, 'Team Leader email verified');
+            return;
+          }
         }
       }
 
@@ -340,7 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackEl.innerHTML = `<span class="feedback-checking">Verifying...</span>`;
       }
 
-      fetch(`api/check_duplicate.php?field=${encodeURIComponent(fieldName)}&value=${encodeURIComponent(val)}`)
+      const checkUrl = `api/check_duplicate.php?field=${encodeURIComponent(fieldName)}&value=${encodeURIComponent(val)}${isLeadSlot ? '&is_lead=1' : ''}`;
+
+      fetch(checkUrl)
         .then(res => res.json())
         .then(data => {
           if (data.available) {
@@ -435,6 +447,13 @@ document.addEventListener('DOMContentLoaded', () => {
     membersContainer.appendChild(createMemberSlotHtml(0)); // Slot 1 (Team Lead)
     membersContainer.appendChild(createMemberSlotHtml(1)); // Slot 2 (Member 2)
     updateTeamSizeUI();
+
+    // If Team Leader email is available, display verified feedback immediately
+    const leadEmailInput = membersContainer.querySelector('.lead-slot-card input[data-field="college_email"]');
+    if (leadEmailInput && leadEmailInput.value) {
+      const fb = leadEmailInput.parentElement.querySelector('.field-feedback');
+      showFeedback(leadEmailInput, fb, true, 'Team Leader email verified');
+    }
   }
 
   // Ensure all phone inputs (including mentor phones) strictly allow max 10 digits
@@ -483,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Validate Roll Number (numbers only) & College Email (@psgitech.ac.in) for all members
+      // Validate Roll Number (numbers only) & Email for all members
       const memberCards = membersContainer.querySelectorAll('.member-slot-card');
       const formatErrors = [];
       memberCards.forEach((card, idx) => {
@@ -494,8 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!/^\d+$/.test(rollVal)) {
           formatErrors.push(`<strong>${roleLabel}:</strong> Roll number must contain numbers only (digits 0–9).`);
         }
-        if (!/^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$/i.test(emailVal)) {
-          formatErrors.push(`<strong>${roleLabel}:</strong> College email must end strictly with @psgitech.ac.in.`);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+          formatErrors.push(`<strong>${roleLabel}:</strong> Please enter a valid email address.`);
         }
       });
 
