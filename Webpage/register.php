@@ -955,13 +955,25 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                     </tr>
                   </thead>
                   <tbody id="budgetTableBody">
-                    <?php if (!empty($existingBudgetItems)): ?>
-                      <?php foreach ($existingBudgetItems as $bIdx => $bItem): 
+                    <?php 
+                      $renderBudgetItems = !empty($existingBudgetItems) ? $existingBudgetItems : [
+                        [
+                          'item_name' => '',
+                          'category' => '',
+                          'quantity' => 1,
+                          'unit_cost' => '',
+                          'amount' => 0.00,
+                          'purpose' => ''
+                        ]
+                      ];
+                      $rowCount = count($renderBudgetItems);
+                      foreach ($renderBudgetItems as $bIdx => $bItem): 
                         $bQty = (int)($bItem['quantity'] ?? 1);
+                        if ($bQty < 1) $bQty = 1;
                         $bUnitCost = (float)($bItem['unit_cost'] ?? 0);
                         $bAmount = (float)($bItem['amount'] ?? ($bQty * $bUnitCost));
-                        $isHighCost = ($bUnitCost > 15000 || $bAmount > 15000);
-                      ?>
+                        $isHighCost = ($bUnitCost > 5000 || $bAmount > 5000);
+                    ?>
                         <tr class="budget-row">
                           <td class="col-num">
                             <span class="row-num"><?= $bIdx + 1 ?></span>
@@ -971,7 +983,7 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                                    placeholder="e.g. ESP32-S3 Microcontroller Board"
                                    value="<?= htmlspecialchars($bItem['item_name'] ?? '') ?>" required>
                             <span class="high-cost-warning" style="<?= $isHighCost ? 'display: inline-flex;' : 'display: none;' ?>">
-                              Item > ₹15,000: Needs coordinator approval
+                              Item &gt; ₹5,000: Prior coordinator approval required
                             </span>
                           </td>
                           <td class="col-cat">
@@ -1003,7 +1015,7 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                               <span class="currency-prefix">₹</span>
                               <input type="number" class="nature-input budget-item-unit-cost" 
                                      min="0" step="0.01" placeholder="0.00" 
-                                     value="<?= $bUnitCost > 0 ? htmlspecialchars($bUnitCost) : '' ?>" required>
+                                     value="<?= $bUnitCost > 0 ? htmlspecialchars((string)$bUnitCost) : '' ?>" required>
                             </div>
                           </td>
                           <td class="col-amount">
@@ -1017,13 +1029,12 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                                    value="<?= htmlspecialchars($bItem['purpose'] ?? '') ?>" required>
                           </td>
                           <td class="col-action">
-                            <button type="button" class="btn-remove-row" aria-label="Remove item" title="Remove item" <?= count($existingBudgetItems) <= 1 ? 'disabled' : '' ?>>
+                            <button type="button" class="btn-remove-row" aria-label="Remove item" title="Remove item" <?= $rowCount <= 1 ? 'disabled' : '' ?>>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                           </td>
                         </tr>
                       <?php endforeach; ?>
-                    <?php endif; ?>
                   </tbody>
                 </table>
               </div>
@@ -1044,6 +1055,120 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     ₹1,00,000.00 remaining of ₹1,00,000 ceiling
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3-STAGE GRANT DISBURSEMENT RELEASE SCHEDULE -->
+            <div class="glass-panel tranche-release-card" style="margin-bottom: 2rem;">
+              <div class="section-heading-row">
+                <div>
+                  <h3 class="section-title" style="margin-bottom: 0.25rem;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    3-Stage Grant Disbursement Release Schedule
+                  </h3>
+                  <span class="section-hint">Funds are released in three milestone-governed tranches as per challenge policy</span>
+                </div>
+                <span class="app-ref-badge" style="font-size: 0.85rem;">Official Seed Grant Policy</span>
+              </div>
+
+              <div class="tranche-grid">
+                <!-- Tranche 1 -->
+                <div class="tranche-item tranche-1">
+                  <div class="tranche-header">
+                    <span class="tranche-badge">Tranche 1 (50%)</span>
+                    <span class="tranche-stage-name">At Sanction</span>
+                  </div>
+                  <div class="tranche-amount-val" id="tranche1Display">₹0.00</div>
+                  <div class="tranche-condition">
+                    Disbursed immediately upon proposal endorsement &amp; grant agreement execution for initial procurement of components, boards, and raw materials.
+                  </div>
+                </div>
+
+                <!-- Tranche 2 -->
+                <div class="tranche-item tranche-2">
+                  <div class="tranche-header">
+                    <span class="tranche-badge">Tranche 2 (30%)</span>
+                    <span class="tranche-stage-name">Month-3 Review</span>
+                  </div>
+                  <div class="tranche-amount-val" id="tranche2Display">₹0.00</div>
+                  <div class="tranche-condition">
+                    Disbursed following satisfactory subsystem demo and progress/bill certification by the Faculty Mentor at the Month-3 milestone review.
+                  </div>
+                </div>
+
+                <!-- Tranche 3 -->
+                <div class="tranche-item tranche-3">
+                  <div class="tranche-header">
+                    <span class="tranche-badge">Tranche 3 (20%)</span>
+                    <span class="tranche-stage-name">Demo Day &amp; Closure</span>
+                  </div>
+                  <div class="tranche-amount-val" id="tranche3Display">₹0.00</div>
+                  <div class="tranche-condition">
+                    Disbursed upon final working prototype submission, verifiable field/bench validation, Demo Day presentation, and bill reconciliation.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EXPENDITURE DISTRIBUTION BY ALLOWED CATEGORIES -->
+            <div class="glass-panel" style="margin-bottom: 2rem; padding: 2rem 2.25rem;">
+              <div class="section-heading-row" style="margin-bottom: 1.25rem;">
+                <div>
+                  <h3 class="section-title" style="margin-bottom: 0.25rem;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    Live Expenditure Distribution by Category
+                  </h3>
+                  <span class="section-hint">Real-time breakdown of your budget across the 6 approved development heads</span>
+                </div>
+              </div>
+
+              <div class="budget-category-summary-grid" id="categorySummaryGrid">
+                <!-- Dynamically populated by budget_step.js -->
+              </div>
+            </div>
+
+            <!-- COMPREHENSIVE SEED GRANT PROCUREMENT GUIDELINES -->
+            <div class="glass-panel" style="margin-bottom: 2rem; padding: 2rem 2.25rem;">
+              <div class="section-heading-row" style="margin-bottom: 1.25rem;">
+                <div>
+                  <h3 class="section-title" style="margin-bottom: 0.25rem;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Seed Grant Procurement &amp; Compliance Guidelines
+                  </h3>
+                  <span class="section-hint">Essential financial norms and invoice requirements</span>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                <!-- Permissible Heads Box -->
+                <div style="background: rgba(34, 197, 94, 0.08); border: 1.5px solid rgba(34, 197, 94, 0.25); border-radius: var(--radius-md); padding: 1.25rem;">
+                  <h4 style="margin: 0 0 0.65rem 0; color: var(--clover-green); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Permissible Development Heads
+                  </h4>
+                  <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.84rem; color: var(--text-body); line-height: 1.55;">
+                    <li>Electronic components, sensors, microcontrollers &amp; modules</li>
+                    <li>Raw engineering materials &amp; mechanical hardware</li>
+                    <li>3D printing, laser cutting, CNC machining &amp; testing fees</li>
+                    <li>Software licenses, cloud server credits &amp; datasets</li>
+                    <li>Local field trials, survey expenses &amp; essential testing travel</li>
+                    <li>Patent search &amp; filing fees (with IPR Cell approval)</li>
+                  </ul>
+                </div>
+
+                <!-- Compliance & Invoicing Norms Box -->
+                <div style="background: rgba(234, 179, 8, 0.08); border: 1.5px solid rgba(234, 179, 8, 0.25); border-radius: var(--radius-md); padding: 1.25rem;">
+                  <h4 style="margin: 0 0 0.65rem 0; color: #b45309; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    Mandatory Invoicing &amp; Approval Norms
+                  </h4>
+                  <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.84rem; color: var(--text-body); line-height: 1.55;">
+                    <li><strong>Prior Approval:</strong> Any single purchase exceeding <strong>₹5,000</strong> requires prior written approval from the Launchpad Coordinator.</li>
+                    <li><strong>Tax Invoices:</strong> All procurement bills must be formal GST tax invoices addressed to <strong>PSG iTech / iTech Launchpad</strong>.</li>
+                    <li><strong>Faculty Certification:</strong> Faculty Mentor must sign and certify all physical bills and delivery challans before expense reimbursement.</li>
+                    <li><strong>Asset Register:</strong> Durable equipment remains the property of the PSG iTech Launchpad laboratory upon project completion.</li>
+                  </ul>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 /**
- * Step 5: Budget & Itemized Financial Plan Controller
+ * Step 5: Budget & Itemized Development Expenditure Controller
  * iTech Seed Grand Challenge 2027
  * PSG iTech Launchpad: Innozone & Startupzone
  */
@@ -14,7 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const grandTotalEl = document.getElementById('grandTotalDisplay');
   const ceilingStatusEl = document.getElementById('ceilingStatusDisplay');
 
+  // Tranche Displays
+  const tranche1El = document.getElementById('tranche1Display');
+  const tranche2El = document.getElementById('tranche2Display');
+  const tranche3El = document.getElementById('tranche3Display');
+
+  // Category Summary Grid
+  const categorySummaryGrid = document.getElementById('categorySummaryGrid');
+
   const MAX_GRANT = 100000.00;
+  const SINGLE_ITEM_APPROVAL_THRESHOLD = 5000.00;
 
   // Allowed Categories
   const CATEGORIES = [
@@ -32,32 +41,64 @@ document.addEventListener('DOMContentLoaded', () => {
     return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // 1. Recalculate Row Amounts and Overall Totals
+  function round2(num) {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // 1. Recalculate Row Amounts, Tranches, Category Breakdown, and Ceiling
   function recalculateBudget() {
+    if (!tableBody) return;
+
     let grandTotal = 0;
+    const categoryTotals = {};
+    CATEGORIES.forEach(c => { categoryTotals[c] = 0; });
+
     const rows = tableBody.querySelectorAll('tr.budget-row');
 
     rows.forEach(row => {
       const qtyInput = row.querySelector('.budget-item-qty');
       const unitCostInput = row.querySelector('.budget-item-unit-cost');
       const amountInput = row.querySelector('.budget-item-amount');
+      const categorySelect = row.querySelector('.budget-item-category');
       const warningBadge = row.querySelector('.high-cost-warning');
 
-      const qty = parseFloat(qtyInput.value) || 0;
-      const unitCost = parseFloat(unitCostInput.value) || 0;
+      const qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+      const unitCost = parseFloat(unitCostInput ? unitCostInput.value : 0) || 0;
       const rowAmount = Math.max(0, qty * unitCost);
 
-      amountInput.value = formatINR(rowAmount);
-      amountInput.dataset.rawAmount = rowAmount.toFixed(2);
+      if (amountInput) {
+        amountInput.value = formatINR(rowAmount);
+        amountInput.dataset.rawAmount = rowAmount.toFixed(2);
+      }
       grandTotal += rowAmount;
 
-      // Single item > ₹15,000 coordinator approval warning
-      if (unitCost > 15000 || rowAmount > 15000) {
-        if (warningBadge) warningBadge.style.display = 'inline-flex';
-      } else {
-        if (warningBadge) warningBadge.style.display = 'none';
+      const catVal = categorySelect ? categorySelect.value.trim() : '';
+      if (catVal && categoryTotals.hasOwnProperty(catVal)) {
+        categoryTotals[catVal] += rowAmount;
+      }
+
+      // Prior Launchpad coordinator approval warning (> ₹5,000)
+      if (warningBadge) {
+        if (unitCost > SINGLE_ITEM_APPROVAL_THRESHOLD || rowAmount > SINGLE_ITEM_APPROVAL_THRESHOLD) {
+          warningBadge.style.display = 'inline-flex';
+          warningBadge.innerHTML = 'Item &gt; ₹5,000: Prior coordinator approval required';
+        } else {
+          warningBadge.style.display = 'none';
+        }
       }
     });
+
+    grandTotal = round2(grandTotal);
 
     // Update Grand Total Display
     if (grandTotalEl) {
@@ -90,14 +131,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     }
-  }
 
-  function round2(num) {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
+    // Update 3-Tranche Release Values
+    const tranche1Val = round2(grandTotal * 0.50);
+    const tranche2Val = round2(grandTotal * 0.30);
+    const tranche3Val = round2(grandTotal * 0.20);
+
+    if (tranche1El) tranche1El.textContent = formatINR(tranche1Val);
+    if (tranche2El) tranche2El.textContent = formatINR(tranche2Val);
+    if (tranche3El) tranche3El.textContent = formatINR(tranche3Val);
+
+    // Update Category Summary Grid
+    if (categorySummaryGrid) {
+      let gridHtml = '';
+      CATEGORIES.forEach(cat => {
+        const catAmount = categoryTotals[cat] || 0;
+        const pct = grandTotal > 0 ? ((catAmount / grandTotal) * 100).toFixed(1) : '0.0';
+        gridHtml += `
+          <div class="budget-cat-card">
+            <div class="budget-cat-name">${escapeHtml(cat)}</div>
+            <div style="text-align: right;">
+              <div class="budget-cat-val">${formatINR(catAmount)}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">${pct}% of Total</div>
+            </div>
+          </div>
+        `;
+      });
+      categorySummaryGrid.innerHTML = gridHtml;
+    }
   }
 
   // 2. Re-index Row Numbers and Update Remove Button States
   function reindexRows() {
+    if (!tableBody) return;
     const rows = tableBody.querySelectorAll('tr.budget-row');
     rows.forEach((row, idx) => {
       const numSpan = row.querySelector('.row-num');
@@ -111,8 +177,39 @@ document.addEventListener('DOMContentLoaded', () => {
     recalculateBudget();
   }
 
-  // 3. Add New Row Function
+  // 3. Attach Listeners to a Row
+  function attachRowListeners(row) {
+    const qtyInput = row.querySelector('.budget-item-qty');
+    const unitCostInput = row.querySelector('.budget-item-unit-cost');
+    const categorySelect = row.querySelector('.budget-item-category');
+    const removeBtn = row.querySelector('.btn-remove-row');
+
+    if (qtyInput) {
+      qtyInput.addEventListener('input', recalculateBudget);
+      qtyInput.addEventListener('change', recalculateBudget);
+    }
+    if (unitCostInput) {
+      unitCostInput.addEventListener('input', recalculateBudget);
+      unitCostInput.addEventListener('change', recalculateBudget);
+    }
+    if (categorySelect) {
+      categorySelect.addEventListener('change', recalculateBudget);
+    }
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        const rows = tableBody.querySelectorAll('tr.budget-row');
+        if (rows.length > 1) {
+          row.remove();
+          reindexRows();
+        }
+      });
+    }
+  }
+
+  // 4. Add New Row Function
   function addBudgetRow(data = {}) {
+    if (!tableBody) return;
+
     const row = document.createElement('tr');
     row.className = 'budget-row';
 
@@ -136,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                placeholder="e.g. ESP32-S3 Microcontroller Board"
                value="${escapeHtml(data.item_name || '')}" required>
         <span class="high-cost-warning" style="display: none;">
-          Item > ₹15,000: Needs coordinator approval
+          Item &gt; ₹5,000: Prior coordinator approval required
         </span>
       </td>
       <td class="col-cat">
@@ -173,39 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
       </td>
     `;
 
-    // Attach Event Listeners to New Row
-    const qtyInput = row.querySelector('.budget-item-qty');
-    const unitCostInput = row.querySelector('.budget-item-unit-cost');
-    const removeBtn = row.querySelector('.btn-remove-row');
-
-    qtyInput.addEventListener('input', recalculateBudget);
-    qtyInput.addEventListener('change', recalculateBudget);
-    unitCostInput.addEventListener('input', recalculateBudget);
-    unitCostInput.addEventListener('change', recalculateBudget);
-
-    removeBtn.addEventListener('click', () => {
-      const rows = tableBody.querySelectorAll('tr.budget-row');
-      if (rows.length > 1) {
-        row.remove();
-        reindexRows();
-      }
-    });
-
+    attachRowListeners(row);
     tableBody.appendChild(row);
     reindexRows();
   }
 
-  function escapeHtml(text) {
-    if (!text) return '';
-    return String(text)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  // 4. Attach Add Row Button Listener
+  // 5. Attach Add Row Button Listener
   if (addRowBtn) {
     addRowBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -213,39 +283,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 5. Initialize Existing Rows or Default First Row
-  const initialRows = tableBody.querySelectorAll('tr.budget-row');
-  if (initialRows.length === 0) {
-    addBudgetRow();
-  } else {
-    // Attach listeners to pre-rendered rows from PHP
-    initialRows.forEach(row => {
-      const qtyInput = row.querySelector('.budget-item-qty');
-      const unitCostInput = row.querySelector('.budget-item-unit-cost');
-      const removeBtn = row.querySelector('.btn-remove-row');
-
-      if (qtyInput) {
-        qtyInput.addEventListener('input', recalculateBudget);
-        qtyInput.addEventListener('change', recalculateBudget);
-      }
-      if (unitCostInput) {
-        unitCostInput.addEventListener('input', recalculateBudget);
-        unitCostInput.addEventListener('change', recalculateBudget);
-      }
-      if (removeBtn) {
-        removeBtn.addEventListener('click', () => {
-          const rows = tableBody.querySelectorAll('tr.budget-row');
-          if (rows.length > 1) {
-            row.remove();
-            reindexRows();
-          }
-        });
-      }
-    });
-    reindexRows();
+  // 6. Initialize Pre-rendered Rows or Add Default Row
+  if (tableBody) {
+    const existingRows = tableBody.querySelectorAll('tr.budget-row');
+    if (existingRows.length === 0) {
+      addBudgetRow();
+    } else {
+      existingRows.forEach(row => attachRowListeners(row));
+      reindexRows();
+    }
   }
 
-  // 6. Form Submission via AJAX
+  // 7. Form Submission via AJAX
   if (budgetForm) {
     budgetForm.addEventListener('submit', async (e) => {
       e.preventDefault();

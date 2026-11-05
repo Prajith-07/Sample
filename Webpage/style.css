@@ -5712,3 +5712,56 @@ body::before {
   color: #ffffff !important;
 }
 
+/* 18. Budget Category Summary Grid */
+.budget-category-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.budget-cat-card {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.15rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.budget-cat-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--clover-green);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);
+}
+
+.budget-cat-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--forest-dark);
+  max-width: 68%;
+  line-height: 1.35;
+}
+
+.budget-cat-val {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--clover-green);
+  text-align: right;
+}
+
+:root[data-theme="dark"] .budget-cat-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+}
+
+:root[data-theme="dark"] .budget-cat-name {
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .budget-cat-val {
+  color: var(--accent) !important;
+}
+
