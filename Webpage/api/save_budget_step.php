@@ -195,7 +195,7 @@ try {
     // Advance team step if needed (Step 5 completed)
     $stmtStep = $pdo->prepare("
         UPDATE `teams`
-        SET `current_step` = GREATEST(`current_step`, 5),
+        SET `current_step` = GREATEST(`current_step`, 6),
             `updated_at` = NOW()
         WHERE `id` = :tid
     ");

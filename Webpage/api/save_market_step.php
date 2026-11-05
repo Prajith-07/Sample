@@ -133,7 +133,7 @@ try {
     // Advance team step tracker
     $stmtStep = $pdo->prepare("
         UPDATE `teams`
-        SET current_step = GREATEST(current_step, 6)
+        SET current_step = GREATEST(current_step, 7)
         WHERE id = :tid
     ");
     $stmtStep->execute([':tid' => $teamId]);

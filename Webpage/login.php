@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($teamLeadRow) {
                         $userType = 'student';
                         $userRecord = $teamLeadRow;
+                        $userRecord['team_id'] = $teamLeadRow['id'];
                         $hashToVerify = $teamLeadRow['password_hash'];
                     }
                 }

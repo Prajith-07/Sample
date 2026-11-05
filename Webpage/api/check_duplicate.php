@@ -56,10 +56,10 @@ try {
             break;
 
         case 'roll_number':
-            if (!preg_match('/^[0-9]+$/', $value)) {
+            if (!preg_match('/^[A-Za-z0-9-]+$/', $value)) {
                 echo json_encode([
                     'available' => false,
-                    'message' => "Roll Number must contain numbers only (digits 0–9)."
+                    'message' => "Roll Number must contain letters, numbers, or hyphens (e.g. 23AD01)."
                 ]);
                 break;
             }

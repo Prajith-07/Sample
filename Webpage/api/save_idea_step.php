@@ -148,7 +148,7 @@ try {
     }
 
     // Update team current_step
-    $stmtStep = $pdo->prepare("UPDATE `teams` SET `current_step` = GREATEST(`current_step`, 2) WHERE id = :tid");
+    $stmtStep = $pdo->prepare("UPDATE `teams` SET `current_step` = GREATEST(`current_step`, 3) WHERE id = :tid");
     $stmtStep->execute([':tid' => $teamId]);
 
     $pdo->commit();

@@ -21,14 +21,12 @@ require_once __DIR__ . '/config/db.php';
 
 $pdo = getDatabaseConnection();
 $currentStep = isset($_GET['step']) ? (int)$_GET['step'] : 1;
-$isFresh = isset($_GET['fresh']) || !empty($_SESSION['is_new_registration']);
 $editTeamId = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
-if ($isFresh) {
-    $editTeamId = 0;
-} elseif ($editTeamId <= 0 && !empty($_SESSION['team_id'])) {
+if ($editTeamId <= 0 && !empty($_SESSION['team_id'])) {
     $editTeamId = (int)$_SESSION['team_id'];
 }
-$appNo = $isFresh ? '' : trim($_GET['app_no'] ?? '');
+$isLeader = !empty($_SESSION['is_lead']);
+$appNo = trim($_GET['app_no'] ?? '');
 
 $existingTeam = null;
 $existingMembers = [];
@@ -69,6 +67,21 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
             $stmtMen = $pdo->prepare("SELECT * FROM `team_mentors` WHERE team_id = :tid");
             $stmtMen->execute([':tid' => $tId]);
             $existingMentors = $stmtMen->fetchAll();
+
+            $facMentor = null;
+            $addFacMentor = null;
+            $indMentor = null;
+            if (!empty($existingMentors)) {
+                foreach ($existingMentors as $m) {
+                    if ($m['mentor_type'] === 'faculty') {
+                        $facMentor = $m;
+                    } elseif ($m['mentor_type'] === 'additional_faculty') {
+                        $addFacMentor = $m;
+                    } elseif ($m['mentor_type'] === 'industry') {
+                        $indMentor = $m;
+                    }
+                }
+            }
 
             // Proposals
             $stmtProp = $pdo->prepare("SELECT * FROM `proposals` WHERE team_id = :tid");
@@ -1849,6 +1862,15 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
         <!-- FORM ERROR ALERT BOX -->
         <div id="formAlertBox" class="form-alert-banner" style="display: none;"></div>
 
+        <?php if (!empty($_SESSION['team_id']) && empty($_SESSION['is_lead'])): ?>
+          <div style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #1d4ed8; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.92rem; display: flex; align-items: flex-start; gap: 0.75rem; line-height: 1.45;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <div>
+              <strong>Team Member Access:</strong> You are currently signed in as a team member. You can review the team details and proposal, but only the <strong>Team Leader</strong> has authority to modify the team roster or mentors.
+            </div>
+          </div>
+        <?php endif; ?>
+
         <!-- MAIN REGISTRATION FORM -->
         <form id="teamRegistrationForm" novalidate>
           <input type="hidden" name="team_id" value="<?= $existingTeam ? (int)$existingTeam['id'] : 0 ?>">
@@ -1934,41 +1956,50 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 <div class="slot-grid-inputs">
                   <div class="form-group">
                     <label class="form-label">Faculty Name with Designation <span class="req">*</span></label>
-                    <input type="text" name="faculty_name" class="nature-input" placeholder="e.g. Dr. R. Ramesh, Associate Professor" required>
+                    <input type="text" name="faculty_name" class="nature-input" placeholder="e.g. Dr. R. Ramesh, Associate Professor" value="<?= htmlspecialchars($facMentor['name'] ?? '') ?>" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Department <span class="req">*</span></label>
                     <select name="faculty_department" class="nature-input" required>
-                      <option value="" disabled selected>Select Department</option>
-                      <option value="Artificial Intelligence & Data Science">AI & Data Science (AI&DS)</option>
-                      <option value="Computer Science & Engineering">Computer Science (CSE)</option>
-                      <option value="Electronics & Communication">Electronics & Comm (ECE)</option>
-                      <option value="Electrical & Electronics">Electrical & Electronics (EEE)</option>
-                      <option value="Mechanical Engineering">Mechanical Engineering</option>
-                      <option value="Civil Engineering">Civil Engineering</option>
-                      <option value="Information Technology">Information Technology (IT)</option>
-                      <option value="Science & Humanities">Science & Humanities (S&H)</option>
+                      <option value="" disabled <?= empty($facMentor['department']) ? 'selected' : '' ?>>Select Department</option>
+                      <?php
+                        $facDepts = [
+                          'Artificial Intelligence & Data Science' => 'AI & Data Science (AI&DS)',
+                          'Computer Science & Engineering' => 'Computer Science (CSE)',
+                          'Electronics & Communication' => 'Electronics & Comm (ECE)',
+                          'Electrical & Electronics' => 'Electrical & Electronics (EEE)',
+                          'Mechanical Engineering' => 'Mechanical Engineering',
+                          'Civil Engineering' => 'Civil Engineering',
+                          'Information Technology' => 'Information Technology (IT)',
+                          'Science & Humanities' => 'Science & Humanities (S&H)'
+                        ];
+                        foreach ($facDepts as $fdVal => $fdLabel):
+                      ?>
+                        <option value="<?= htmlspecialchars($fdVal) ?>" <?= (($facMentor['department'] ?? '') === $fdVal) ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($fdLabel) ?>
+                        </option>
+                      <?php endforeach; ?>
                     </select>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Faculty Email (@psgitech.ac.in) <span class="req">*</span></label>
-                    <input type="email" name="faculty_email" class="nature-input" placeholder="e.g. faculty.ece@psgitech.ac.in" required>
+                    <input type="email" name="faculty_email" class="nature-input" placeholder="e.g. faculty.ece@psgitech.ac.in" value="<?= htmlspecialchars($facMentor['email'] ?? '') ?>" required>
                     <span class="field-hint">A secure approval link will be emailed upon final submission.</span>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Mobile Phone Number <span class="req">*</span></label>
-                    <input type="tel" name="faculty_phone" class="nature-input" placeholder="10-digit number" maxlength="10" required>
+                    <input type="tel" name="faculty_phone" class="nature-input" placeholder="10-digit number" maxlength="10" value="<?= htmlspecialchars($facMentor['phone'] ?? '') ?>" required>
                   </div>
                 </div>
               </div>
 
               <!-- Additional Faculty Mentor (Optional) -->
               <div>
-                <button type="button" id="toggleAddFacultyBtn" class="btn-toggle-optional">
-                  + Add Co-Faculty Mentor (Optional)
+                <button type="button" id="toggleAddFacultyBtn" class="btn-toggle-optional <?= !empty($addFacMentor['name']) ? 'btn-toggle-active' : '' ?>">
+                  <?= !empty($addFacMentor['name']) ? '− Remove Co-Faculty Mentor' : '+ Add Co-Faculty Mentor (Optional)' ?>
                 </button>
 
-                <div id="addFacultyCard" class="mentor-card glass-panel" style="display: none; margin-top: 1rem;">
+                <div id="addFacultyCard" class="mentor-card glass-panel" style="<?= !empty($addFacMentor['name']) ? 'display: block;' : 'display: none;' ?> margin-top: 1rem;">
                   <div class="slot-card-header">
                     <div class="slot-header-left">
                       <h3 class="member-role-title">Additional Faculty Mentor</h3>
@@ -1980,28 +2011,26 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                   <div class="slot-grid-inputs">
                     <div class="form-group">
                       <label class="form-label">Faculty Name & Designation</label>
-                      <input type="text" name="add_faculty_name" class="nature-input" placeholder="e.g. Dr. P. Kavitha, Asst. Professor">
+                      <input type="text" name="add_faculty_name" class="nature-input" placeholder="e.g. Dr. P. Kavitha, Asst. Professor" value="<?= htmlspecialchars($addFacMentor['name'] ?? '') ?>">
                     </div>
                     <div class="form-group">
                       <label class="form-label">Department</label>
                       <select name="add_faculty_department" class="nature-input">
-                        <option value="" selected>Select Department (Optional)</option>
-                        <option value="Artificial Intelligence & Data Science">AI & Data Science (AI&DS)</option>
-                        <option value="Computer Science & Engineering">Computer Science (CSE)</option>
-                        <option value="Electronics & Communication">Electronics & Comm (ECE)</option>
-                        <option value="Electrical & Electronics">Electrical & Electronics (EEE)</option>
-                        <option value="Mechanical Engineering">Mechanical Engineering</option>
-                        <option value="Civil Engineering">Civil Engineering</option>
-                        <option value="Information Technology">Information Technology (IT)</option>
+                        <option value="" <?= empty($addFacMentor['department']) ? 'selected' : '' ?>>Select Department (Optional)</option>
+                        <?php foreach ($facDepts as $fdVal => $fdLabel): ?>
+                          <option value="<?= htmlspecialchars($fdVal) ?>" <?= (($addFacMentor['department'] ?? '') === $fdVal) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($fdLabel) ?>
+                          </option>
+                        <?php endforeach; ?>
                       </select>
                     </div>
                     <div class="form-group">
                       <label class="form-label">Faculty Email</label>
-                      <input type="email" name="add_faculty_email" class="nature-input" placeholder="faculty@psgitech.ac.in">
+                      <input type="email" name="add_faculty_email" class="nature-input" placeholder="faculty@psgitech.ac.in" value="<?= htmlspecialchars($addFacMentor['email'] ?? '') ?>">
                     </div>
                     <div class="form-group">
                       <label class="form-label">Mobile Phone Number</label>
-                      <input type="tel" name="add_faculty_phone" class="nature-input" placeholder="10-digit number" maxlength="10">
+                      <input type="tel" name="add_faculty_phone" class="nature-input" placeholder="10-digit number" maxlength="10" value="<?= htmlspecialchars($addFacMentor['phone'] ?? '') ?>">
                     </div>
                   </div>
                 </div>
@@ -2020,28 +2049,28 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
                 <div class="slot-grid-inputs">
                   <div class="form-group">
                     <label class="form-label">Expert Full Name <span class="req">*</span></label>
-                    <input type="text" name="industry_name" class="nature-input" placeholder="e.g. Mr. Rajesh Narayanan" required>
+                    <input type="text" name="industry_name" class="nature-input" placeholder="e.g. Mr. Rajesh Narayanan" value="<?= htmlspecialchars($indMentor['name'] ?? '') ?>" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Organisation / Company <span class="req">*</span></label>
-                    <input type="text" name="industry_org" class="nature-input" placeholder="e.g. Bosch Global / Larsen & Toubro" required>
+                    <input type="text" name="industry_org" class="nature-input" placeholder="e.g. Bosch Global / Larsen & Toubro" value="<?= htmlspecialchars($indMentor['organisation'] ?? '') ?>" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Designation / Role <span class="req">*</span></label>
-                    <input type="text" name="industry_designation" class="nature-input" placeholder="e.g. Principal Architect / Engineering Lead" required>
+                    <input type="text" name="industry_designation" class="nature-input" placeholder="e.g. Principal Architect / Engineering Lead" value="<?= htmlspecialchars($indMentor['designation'] ?? '') ?>" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Official Work Email <span class="req">*</span></label>
-                    <input type="email" name="industry_email" class="nature-input" placeholder="e.g. rajesh@company.com" required>
+                    <input type="email" name="industry_email" class="nature-input" placeholder="e.g. rajesh@company.com" value="<?= htmlspecialchars($indMentor['email'] ?? '') ?>" required>
                     <span class="field-hint">A secure link will be sent to the expert to review and sign off.</span>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Mobile Phone Number <span class="req">*</span></label>
-                    <input type="tel" name="industry_phone" class="nature-input" placeholder="10-digit number" maxlength="10" required>
+                    <input type="tel" name="industry_phone" class="nature-input" placeholder="10-digit number" maxlength="10" value="<?= htmlspecialchars($indMentor['phone'] ?? '') ?>" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label">LinkedIn Profile URL <span class="section-hint">(Optional)</span></label>
-                    <input type="url" name="industry_linkedin" class="nature-input" placeholder="https://linkedin.com/in/username">
+                    <input type="url" name="industry_linkedin" class="nature-input" placeholder="https://linkedin.com/in/username" value="<?= htmlspecialchars($indMentor['linkedin_url'] ?? '') ?>">
                   </div>
                 </div>
               </div>
@@ -2092,6 +2121,8 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
   <?php else: ?>
     <script>
       window.stagedLeaderEmail = <?= json_encode($stagedLeaderEmail) ?>;
+      window.existingMembers = <?= json_encode($existingMembers ?: []) ?>;
+      window.isTeamLead = <?= json_encode($isLeader) ?>;
     </script>
     <script src="js/registration.js?v=<?= filemtime(__DIR__ . '/js/registration.js') ?>"></script>
   <?php endif; ?>

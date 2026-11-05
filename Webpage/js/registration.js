@@ -123,10 +123,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return isInterdisciplinary;
   }
 
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   // 3. Create Dynamic Member Slot HTML
-  function createMemberSlotHtml(index) {
+  function createMemberSlotHtml(index, data = null) {
     const order = index + 1;
     const isLead = (index === 0);
+
+    const mName = data ? (data.full_name || '') : '';
+    const mRoll = data ? (data.roll_number || '') : '';
+    const mDept = data ? (data.department || '') : '';
+    const mYear = data ? (data.year_of_study || '') : '';
+    let mEmail = data ? (data.college_email || '') : '';
+    if (!mEmail && isLead && window.stagedLeaderEmail) {
+      mEmail = window.stagedLeaderEmail;
+    }
+    const mPhone = data ? (data.phone_number || '') : '';
+    const mGender = data ? (data.gender || '') : '';
 
     const card = document.createElement('div');
     card.className = `member-slot-card glass-panel ${isLead ? 'lead-slot-card' : 'regular-slot-card'}`;
@@ -159,25 +175,25 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="form-group">
           <label class="form-label">Full Name <span class="req">*</span></label>
           <input type="text" data-field="full_name" name="members[${index}][full_name]" 
-                 class="nature-input member-name" placeholder="e.g. Anandha Kumar S" required>
+                 class="nature-input member-name" placeholder="e.g. Anandha Kumar S" value="${escapeHtml(mName)}" required>
         </div>
 
         <!-- Roll Number / College ID -->
         <div class="form-group">
           <label class="form-label">Roll Number <span class="req">*</span></label>
           <input type="text" data-field="roll_number" name="members[${index}][roll_number]" 
-                 class="nature-input member-roll ajax-check" placeholder="e.g. 231405" 
-                 inputmode="numeric" pattern="[0-9]+" maxlength="12" required>
+                 class="nature-input member-roll ajax-check" placeholder="e.g. 23AD01 or 231405" 
+                 pattern="[A-Za-z0-9-]+" maxlength="12" value="${escapeHtml(mRoll)}" required>
           <div class="field-feedback"></div>
-          <span class="field-hint">Numbers only (digits 0–9)</span>
+          <span class="field-hint">e.g. 23AD01, 21CS05, or numeric ID</span>
         </div>
 
         <!-- Department -->
         <div class="form-group">
           <label class="form-label">Department <span class="req">*</span></label>
           <select data-field="department" name="members[${index}][department]" class="nature-input" required>
-            <option value="" disabled selected>Select Department</option>
-            ${getDeptOptionsHtml()}
+            <option value="" disabled ${!mDept ? 'selected' : ''}>Select Department</option>
+            ${getDeptOptionsHtml(mDept)}
           </select>
         </div>
 
@@ -185,10 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="form-group">
           <label class="form-label">Year of Study <span class="req">*</span></label>
           <select data-field="year_of_study" name="members[${index}][year_of_study]" class="nature-input" required>
-            <option value="" disabled selected>Select Year</option>
-            <option value="II">II Year</option>
-            <option value="III">III Year</option>
-            <option value="Final">Final Year</option>
+            <option value="" disabled ${!mYear ? 'selected' : ''}>Select Year</option>
+            <option value="II" ${mYear === 'II' ? 'selected' : ''}>II Year</option>
+            <option value="III" ${mYear === 'III' ? 'selected' : ''}>III Year</option>
+            <option value="Final" ${mYear === 'Final' ? 'selected' : ''}>Final Year</option>
           </select>
         </div>
 
@@ -197,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <label class="form-label">${isLead ? 'Team Leader Email' : 'Member Email'} <span class="req">*</span></label>
           <input type="email" data-field="college_email" name="members[${index}][college_email]" 
                  class="nature-input member-email ajax-check" 
-                 placeholder="${isLead ? 'e.g. yourname@gmail.com or college email' : 'e.g. member@psgitech.ac.in or gmail.com'}" 
-                 ${(isLead && window.stagedLeaderEmail) ? `value="${window.stagedLeaderEmail}"` : ''}
+                 placeholder="${isLead ? 'e.g. yourname@gmail.com or college email' : 'e.g. member@psgitech.ac.in'}" 
+                 value="${escapeHtml(mEmail)}"
                  required>
           <div class="field-feedback"></div>
           <span class="field-hint">${isLead ? 'Official login & contact email for Team Leader' : 'College or active email'}</span>
@@ -208,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="form-group">
           <label class="form-label">Mobile Phone Number <span class="req">*</span></label>
           <input type="tel" data-field="phone_number" name="members[${index}][phone_number]" 
-                 class="nature-input member-phone ajax-check" placeholder="10-digit number" maxlength="10" required>
+                 class="nature-input member-phone ajax-check" placeholder="10-digit number" maxlength="10" value="${escapeHtml(mPhone)}" required>
           <div class="field-feedback"></div>
         </div>
 
@@ -216,9 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="form-group">
           <label class="form-label">Gender <span class="req">*</span></label>
           <select data-field="gender" name="members[${index}][gender]" class="nature-input member-gender" required>
-            <option value="" disabled selected>Select Gender</option>
-            <option value="Female">Female</option>
-            <option value="Male">Male</option>
+            <option value="" disabled ${!mGender ? 'selected' : ''}>Select Gender</option>
+            <option value="Female" ${mGender === 'Female' ? 'selected' : ''}>Female</option>
+            <option value="Male" ${mGender === 'Male' ? 'selected' : ''}>Male</option>
           </select>
         </div>
       </div>
@@ -286,8 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Format validations
       if (fieldName === 'roll_number') {
-        if (!/^\d+$/.test(val)) {
-          showFeedback(input, feedbackEl, false, 'Roll Number must contain numbers only (digits 0-9).');
+        if (!/^[A-Za-z0-9-]+$/.test(val)) {
+          showFeedback(input, feedbackEl, false, 'Roll Number must contain letters, numbers, or hyphens (e.g. 23AD01).');
           return;
         }
       }
@@ -403,10 +419,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 7. Initial Render: Exactly 2 Slots (Team Lead + Member 2)
+  // 7. Initial Render: Use saved members from DB or create default slots
   if (membersContainer && membersContainer.children.length === 0) {
-    membersContainer.appendChild(createMemberSlotHtml(0)); // Slot 1 (Team Lead)
-    membersContainer.appendChild(createMemberSlotHtml(1)); // Slot 2 (Member 2)
+    if (window.existingMembers && window.existingMembers.length > 0) {
+      window.existingMembers.forEach((m, idx) => {
+        membersContainer.appendChild(createMemberSlotHtml(idx, m));
+      });
+      // If only 1 member recorded, ensure Member 2 slot is present
+      if (window.existingMembers.length < MIN_MEMBERS) {
+        for (let i = window.existingMembers.length; i < MIN_MEMBERS; i++) {
+          membersContainer.appendChild(createMemberSlotHtml(i));
+        }
+      }
+    } else {
+      membersContainer.appendChild(createMemberSlotHtml(0)); // Slot 1 (Team Lead)
+      membersContainer.appendChild(createMemberSlotHtml(1)); // Slot 2 (Member 2)
+    }
     updateTeamSizeUI();
 
     // If Team Leader email is available, display verified feedback immediately
@@ -414,6 +442,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (leadEmailInput && leadEmailInput.value) {
       const fb = leadEmailInput.parentElement.querySelector('.field-feedback');
       showFeedback(leadEmailInput, fb, true, 'Team Leader email verified');
+    }
+
+    // If non-leader member logged in, enforce view-only mode
+    if (window.isTeamLead === false) {
+      if (addMemberBtn) addMemberBtn.style.display = 'none';
+      membersContainer.querySelectorAll('.btn-remove-member').forEach(b => b.style.display = 'none');
+      document.querySelectorAll('#teamRegistrationForm input, #teamRegistrationForm select').forEach(el => {
+        el.setAttribute('disabled', 'disabled');
+      });
+      const saveBtn = document.getElementById('saveContinueBtn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = '0.5';
+        saveBtn.textContent = 'View Only (Leader Authorized)';
+      }
     }
   }
 
@@ -425,13 +468,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Ensure all roll number inputs strictly allow max 12 digits (numbers only)
+  // Ensure all roll number inputs allow alphanumeric roll numbers (e.g. 23AD01)
   document.querySelectorAll('input[data-field="roll_number"]').forEach(rollInput => {
     rollInput.setAttribute('maxlength', '12');
-    rollInput.setAttribute('inputmode', 'numeric');
-    rollInput.setAttribute('pattern', '[0-9]+');
     rollInput.addEventListener('input', () => {
-      rollInput.value = rollInput.value.replace(/\D/g, '').slice(0, 12);
+      rollInput.value = rollInput.value.replace(/[^A-Za-z0-9-]/g, '').slice(0, 12);
     });
   });
 

@@ -79,17 +79,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($isEmailTaken) {
                 $authError = "An account with the email <strong>" . htmlspecialchars($leaderEmail) . "</strong> is already registered. Please <a href='login.php' style='color:#15803d; font-weight:700; text-decoration:underline;'>move to the Login page</a> to sign in.";
             } else {
-                // Email is clean: DO NOT insert into DB yet!
-                // Stage the leader credentials in session and open a fresh registration portal for Step 1
-                $_SESSION['staged_lead_email'] = $leaderEmail;
-                $_SESSION['staged_lead_password_hash'] = password_hash($password, PASSWORD_DEFAULT);
-                $_SESSION['is_new_registration'] = true;
+                // Generate Unique Application Number (e.g. SGC27-XXXXXX)
+                $applicationNo = 'SGC27-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+                $tempTeamName = 'Draft Team ' . substr($applicationNo, -4);
+                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-                // Clear any prior active team session
-                unset($_SESSION['team_id']);
-                unset($_SESSION['team_name']);
+                // Immediately create the team in MySQL so it exists and can be tracked
+                $stmtNewTeam = $pdo->prepare("
+                    INSERT INTO `teams` (`application_no`, `team_name`, `leader_email`, `password_hash`, `team_size`, `has_woman_member`, `current_step`, `status`)
+                    VALUES (:app_no, :tname, :lemail, :phash, 2, 0, 1, 'Draft')
+                ");
+                $stmtNewTeam->execute([
+                    ':app_no' => $applicationNo,
+                    ':tname'  => $tempTeamName,
+                    ':lemail' => $leaderEmail,
+                    ':phash'  => $passwordHash
+                ]);
+                $newTeamId = (int)$pdo->lastInsertId();
 
-                header("Location: register.php?step=1&fresh=1");
+                // Insert initial team_member record for the Team Leader
+                $stmtLeadMem = $pdo->prepare("
+                    INSERT INTO `team_members` (`team_id`, `is_lead`, `member_order`, `full_name`, `roll_number`, `department`, `year_of_study`, `college_email`, `phone_number`, `gender`, `password_hash`, `is_dummy_password`)
+                    VALUES (:tid, 1, 1, '', '', '', 'II', :email, '', 'Male', :phash, 0)
+                ");
+                $stmtLeadMem->execute([
+                    ':tid'   => $newTeamId,
+                    ':email' => $leaderEmail,
+                    ':phash' => $passwordHash
+                ]);
+
+                // Clear any prior staged data and establish active Team Leader session
+                unset($_SESSION['staged_lead_email']);
+                unset($_SESSION['staged_lead_password_hash']);
+                unset($_SESSION['is_new_registration']);
+                unset($_SESSION['must_change_password']);
+
+                $_SESSION['team_id']    = $newTeamId;
+                $_SESSION['user_email'] = $leaderEmail;
+                $_SESSION['team_name']  = $tempTeamName;
+                $_SESSION['is_lead']    = true;
+                $_SESSION['user_role']  = 'student';
+
+                header("Location: register.php?step=1&team_id={$newTeamId}");
                 exit;
             }
         }

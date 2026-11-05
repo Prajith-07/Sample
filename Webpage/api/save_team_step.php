@@ -43,6 +43,16 @@ $faculty = $data['faculty_mentor'] ?? [];
 $addFaculty = $data['additional_faculty'] ?? [];
 $industry = $data['industry_mentor'] ?? [];
 
+// Restrict member modifications strictly to Team Leader
+if (isset($_SESSION['is_lead']) && $_SESSION['is_lead'] === false) {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Only the designated Team Leader has authority to create, edit, or modify team members and mentors.'
+    ]);
+    exit;
+}
+
 $errors = [];
 
 // 1. Team Name Validation
@@ -111,11 +121,11 @@ foreach ($members as $idx => $m) {
         $errors[] = "{$label}: Full Name is required.";
     }
 
-    // Roll number (must contain numbers only)
+    // Roll number (letters, numbers, hyphens e.g. 23AD01 or numeric)
     if (empty($rollNo)) {
         $errors[] = "{$label}: Roll Number / College ID is required.";
-    } elseif (!preg_match('/^[0-9]+$/', $rollNo)) {
-        $errors[] = "{$label}: Roll Number must contain numbers only (digits 0–9).";
+    } elseif (!preg_match('/^[A-Za-z0-9-]+$/', $rollNo)) {
+        $errors[] = "{$label}: Roll Number must contain alphanumeric characters or hyphens (e.g. 23AD01).";
     } elseif (strlen($rollNo) > 12) {
         $errors[] = "{$label}: Roll Number cannot exceed 12 digits.";
     } elseif (in_array($rollNo, $seenRolls)) {
@@ -354,7 +364,7 @@ try {
         // Update existing team
         $stmt = $pdo->prepare("
             UPDATE `teams` 
-            SET `team_name` = :tname, `leader_email` = :lemail, `password_hash` = :phash, `team_size` = :tsize, `has_woman_member` = :has_woman, `updated_at` = NOW()
+            SET `team_name` = :tname, `leader_email` = :lemail, `password_hash` = :phash, `team_size` = :tsize, `has_woman_member` = :has_woman, `current_step` = GREATEST(`current_step`, 2), `updated_at` = NOW()
             WHERE `id` = :tid
         ");
         $stmt->execute([
@@ -381,7 +391,7 @@ try {
 
         $stmt = $pdo->prepare("
             INSERT INTO `teams` (`application_no`, `team_name`, `leader_email`, `password_hash`, `team_size`, `has_woman_member`, `current_step`, `status`)
-            VALUES (:app_no, :tname, :lemail, :phash, :tsize, :has_woman, 1, 'Draft')
+            VALUES (:app_no, :tname, :lemail, :phash, :tsize, :has_woman, 2, 'Draft')
         ");
         $stmt->execute([
             ':app_no' => $applicationNo,
