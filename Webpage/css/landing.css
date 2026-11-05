@@ -1580,3 +1580,24 @@ html[data-theme="dark"] .challenge-logo .o path {
         gap: 4px;
     }
 }
+
+/* Mobile & Tablet App Feel Polish for Landing */
+@media (max-width: 768px) {
+    button, a, input, select {
+        touch-action: manipulation;
+    }
+
+    .hero-card__actions {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    .hero-card__actions .button {
+        width: 100% !important;
+        justify-content: center !important;
+        min-height: 48px !important;
+        font-size: 1rem !important;
+    }
+}
+

@@ -207,7 +207,12 @@ $isCurrentStepCompleted = isStepCompletedByLeader(
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0e3824">
+  <link rel="manifest" href="manifest.json">
   <title><?= $currentStep === 7 ? 'Step 7: Declaration & Mentor Approval' : ($currentStep === 6 ? 'Step 6: Market & Impact' : ($currentStep === 5 ? 'Step 5: Budget & Financial Plan' : ($currentStep === 4 ? 'Step 4: PoC Plan & Milestones' : ($currentStep === 3 ? 'Step 3: Readiness & TRL' : ($currentStep === 2 ? 'Step 2: The Idea' : 'Step 1: Team & Accounts'))))) ?> | iTech Seed Grand Challenge 2027</title>
   
   <!-- Fonts: Outfit, Plus Jakarta Sans, Space Grotesk, Syne -->
@@ -226,6 +231,17 @@ $isCurrentStepCompleted = isStepCompletedByLeader(
       } catch (e) {}
       document.documentElement.dataset.theme = theme;
     })();
+
+    // Auto-center active step pill on mobile/tablet viewports
+    document.addEventListener('DOMContentLoaded', () => {
+      const activeStep = document.querySelector('.step-dock-active');
+      const dockContainer = document.querySelector('.step-dock-container');
+      if (activeStep && dockContainer && window.innerWidth <= 820) {
+        setTimeout(() => {
+          activeStep.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }, 150);
+      }
+    });
   </script>
 </head>
 <body>

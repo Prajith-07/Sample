@@ -105,7 +105,12 @@ if ($pdo && ($teamId > 0 || !empty($appNo))) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0e3824">
+  <link rel="manifest" href="manifest.json">
   <title>Registration Completed | iTech Seed Grand Challenge 2027</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">

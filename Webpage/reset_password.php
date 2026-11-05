@@ -148,10 +148,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validUser) {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="color-scheme" content="light dark">
     <meta name="description" content="Set a new password for PSG iTech Seed Grant Challenge 2027.">
-    <meta name="theme-color" content="#f2f5ef">
+    <meta name="theme-color" content="#0e3824">
+    <link rel="manifest" href="manifest.json">
     <title>Reset Password | PSG iTech Seed Grant Challenge 2027</title>
     <script>
         (() => {

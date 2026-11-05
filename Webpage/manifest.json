@@ -1,0 +1,18 @@
+{
+  "name": "iTech Seed Grand Challenge 2027",
+  "short_name": "iTech Seed",
+  "description": "PSG iTech Seed Grand Challenge 2027 - Innovation & Startup Grant Portal",
+  "start_url": "index.php",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0e3824",
+  "theme_color": "#15803d",
+  "icons": [
+    {
+      "src": "assets/college-logo-transparent.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
