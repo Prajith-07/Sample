@@ -119,6 +119,28 @@ if (empty($token) || strlen($token) < 32) {
     .btn-decline-toggle:hover { background: rgba(239, 68, 68, 0.15); }
     .status-badge-approved { background: rgba(184, 237, 69, 0.2); color: var(--accent-strong); border: 1px solid var(--accent); padding: 0.5rem 1.2rem; border-radius: 999px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; }
     .status-badge-declined { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem 1.2rem; border-radius: 999px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; }
+
+    /* Dark Mode Theme Overrides for Mentor Approval */
+    :root[data-theme="dark"] .endorse-header-card { background: rgba(255, 255, 255, 0.05); border-color: rgba(200, 255, 80, 0.25); border-left: 5px solid var(--accent); }
+    :root[data-theme="dark"] .role-faculty { background: rgba(200, 255, 80, 0.15); color: var(--accent); border-color: var(--accent); }
+    :root[data-theme="dark"] .role-industry { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: rgba(59, 130, 246, 0.4); }
+    :root[data-theme="dark"] .app-ref-badge { background: rgba(200, 255, 80, 0.12) !important; color: var(--accent) !important; border: 1px solid rgba(200, 255, 80, 0.35) !important; }
+    :root[data-theme="dark"] .dossier-field-box { background: rgba(255, 255, 255, 0.04); border-color: rgba(236, 246, 234, 0.12); }
+    :root[data-theme="dark"] .dossier-field-box h4 { color: #a2ada3; }
+    :root[data-theme="dark"] .dossier-field-box p { color: #f2f5ed; }
+    :root[data-theme="dark"] .consent-card { background: rgba(255, 255, 255, 0.045); border-color: var(--accent); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
+    :root[data-theme="dark"] .consent-text { color: #f2f5ed; }
+    :root[data-theme="dark"] .consent-text strong { color: #ffffff; }
+    :root[data-theme="dark"] .decline-box { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.35); }
+    :root[data-theme="dark"] .decline-box h4 { color: #fca5a5; }
+    :root[data-theme="dark"] .btn-decline-toggle { border-color: #f87171; color: #f87171; }
+    :root[data-theme="dark"] .btn-decline-toggle:hover { background: rgba(239, 68, 68, 0.2); }
+    :root[data-theme="dark"] .status-badge-approved { background: rgba(200, 255, 80, 0.15); color: var(--accent); border-color: var(--accent); }
+    :root[data-theme="dark"] .status-badge-declined { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4); }
+    :root[data-theme="dark"] .nature-input { background: rgba(255, 255, 255, 0.06); border-color: rgba(236, 246, 234, 0.16); color: #f2f5ed; }
+    :root[data-theme="dark"] .nature-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200, 255, 80, 0.25); background: rgba(255, 255, 255, 0.1); }
+    :root[data-theme="dark"] .field-hint { color: #a2ada3 !important; }
+    :root[data-theme="dark"] .field-hint strong { color: var(--accent) !important; }
   </style>
 </head>
 <body>
@@ -573,6 +595,7 @@ if (empty($token) || strlen($token) < 32) {
 
   <!-- Inline Endorsement Controller Script -->
   <script>
+    window.mentorName = <?= json_encode($mentor['name'] ?? '') ?>;
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('mentorConsentForm');
       if (!form) return;
@@ -700,7 +723,38 @@ if (empty($token) || strlen($token) < 32) {
         if (!agreeGuide) errors.push('You must agree to guide this team.');
         if (!certifyProgress) errors.push('As Faculty Mentor, you must agree to certify progress & bills and attend reviews.');
         if (!originalIdea) errors.push('You must confirm proposal originality and technical feasibility.');
-        if (!sigName || sigName.length < 3) errors.push('Please type your digital signature in format: Mentor_Name DD/MM/YYYY.');
+        if (!sigName || sigName.length < 3) {
+          errors.push('Please type your digital signature in format: Mentor_Name DD/MM/YYYY.');
+        } else {
+          const sigMatch = sigName.match(/^(.+?)\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})$/);
+          if (!sigMatch) {
+            errors.push('Signature must follow format: Mentor_Name DD/MM/YYYY (e.g. ' + (window.mentorName || 'Your Name') + ' ' + (new Date().toLocaleDateString('en-GB')) + ').');
+          } else {
+            const typedName = sigMatch[1].trim();
+            const typedDate = sigMatch[2].trim();
+            
+            if (window.mentorName) {
+              const clean = str => str.toLowerCase().replace(/^(dr\.|mr\.|ms\.|mrs\.|prof\.)\s*/i, '').replace(/\s+/g, ' ').trim();
+              if (clean(typedName) !== clean(window.mentorName)) {
+                errors.push(`The signature name "${typedName}" does not match registered Mentor name "${window.mentorName}". You must sign with your own full name.`);
+              }
+            }
+
+            const dm = typedDate.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+            if (dm) {
+              let day = parseInt(dm[1], 10);
+              let month = parseInt(dm[2], 10);
+              let year = parseInt(dm[3], 10);
+              if (year < 100) year += 2000;
+              const now = new Date();
+              const todayStr = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+              const enteredStr = String(day).padStart(2, '0') + '/' + String(month).padStart(2, '0') + '/' + year;
+              if (enteredStr !== todayStr) {
+                errors.push(`Signature date must be today's date (${todayStr}). You entered: ${typedDate}.`);
+              }
+            }
+          }
+        }
 
         if (errors.length > 0) {
           showAlert(errors);

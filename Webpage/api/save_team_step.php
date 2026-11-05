@@ -149,6 +149,8 @@ foreach ($members as $idx => $m) {
     // Email
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "{$label}: A valid email address is required.";
+    } elseif (!$isLead && !preg_match('/@psgitech\.ac\.in$/i', $email)) {
+        $errors[] = "{$label}: Official college email ending with @psgitech.ac.in is required (e.g. member@psgitech.ac.in).";
     } elseif (in_array($email, $seenEmails)) {
         $errors[] = "Duplicate Email detected: '{$email}' is entered more than once within your team.";
     } else {
@@ -273,6 +275,8 @@ if (empty($facName) || empty($facDept) || empty($facEmail) || empty($facPhone)) 
     $errors[] = "Faculty Mentor: Mobile phone number must be exactly 10 digits.";
 } elseif (!filter_var($facEmail, FILTER_VALIDATE_EMAIL)) {
     $errors[] = "Faculty Mentor: Please enter a valid email address.";
+} elseif (!preg_match('/@psgitech\.ac\.in$/i', $facEmail)) {
+    $errors[] = "Faculty Mentor: Official college email ending with @psgitech.ac.in is required (e.g. faculty.ece@psgitech.ac.in).";
 } elseif (in_array($facEmail, $seenEmails)) {
     $errors[] = "Conflict: Faculty Mentor email cannot be the same as any student team member's email.";
 }
@@ -292,6 +296,8 @@ if (!empty($addFacName) || !empty($addFacEmail)) {
         $errors[] = "Additional Faculty Mentor: Mobile phone number must be exactly 10 digits.";
     } elseif (!filter_var($addFacEmail, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Additional Faculty Mentor: Please enter a valid email address.";
+    } elseif (!preg_match('/@psgitech\.ac\.in$/i', $addFacEmail)) {
+        $errors[] = "Additional Faculty Mentor: Official college email ending with @psgitech.ac.in is required (e.g. faculty@psgitech.ac.in).";
     } elseif (in_array($addFacEmail, $seenEmails) || $addFacEmail === $facEmail) {
         $errors[] = "Conflict: Additional Faculty Mentor email must differ from students and primary faculty mentor.";
     }

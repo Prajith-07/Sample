@@ -3,6 +3,26 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $isLoggedIn = !empty($_SESSION['team_id']);
+$myAppUrl = 'register.php';
+if ($isLoggedIn) {
+    if (!empty($_SESSION['team_status']) && in_array($_SESSION['team_status'], ['Submitted', 'Under Screening', 'Approved', 'Completed'], true)) {
+        $myAppUrl = 'registration_success.php?team_id=' . (int)$_SESSION['team_id'];
+    } else {
+        try {
+            require_once __DIR__ . '/../config/db.php';
+            $hdrPdo = getDatabaseConnection();
+            if ($hdrPdo) {
+                $stmtSt = $hdrPdo->prepare("SELECT status FROM `teams` WHERE id = :tid LIMIT 1");
+                $stmtSt->execute([':tid' => (int)$_SESSION['team_id']]);
+                $st = $stmtSt->fetchColumn();
+                if ($st && in_array($st, ['Submitted', 'Under Screening', 'Approved', 'Completed'], true)) {
+                    $_SESSION['team_status'] = $st;
+                    $myAppUrl = 'registration_success.php?team_id=' . (int)$_SESSION['team_id'];
+                }
+            }
+        } catch (Throwable $e) {}
+    }
+}
 ?>
 <header class="site-header">
     <div class="site-header__inner page-shell">
@@ -15,7 +35,7 @@ $isLoggedIn = !empty($_SESSION['team_id']);
 
         <nav class="header-actions" aria-label="Account and display options">
             <?php if ($isLoggedIn): ?>
-                <a class="button button--primary button--small" href="register.php">My Application</a>
+                <a class="button button--primary button--small" href="<?php echo htmlspecialchars($myAppUrl); ?>">My Application</a>
                 <a class="button button--quiet button--small" href="logout.php">Sign Out</a>
             <?php elseif (isset($currentAuthPage) && in_array($currentAuthPage, ['login', 'signup'], true)): ?>
                 <a class="button button--quiet button--small<?php echo $currentAuthPage === 'login' ? ' header-action--active' : ''; ?>" href="login.php"<?php echo $currentAuthPage === 'login' ? ' aria-current="page"' : ''; ?>>Sign In</a>

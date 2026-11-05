@@ -77,35 +77,6 @@ if (!$decMentorGuide) {
     $errors[] = 'You must confirm that your designated mentors have agreed to guide this project.';
 }
 
-if (empty($leadSignature) || mb_strlen($leadSignature) < 3) {
-    $errors[] = 'Please enter the Team Lead full name as the binding digital e-signature (min 3 characters).';
-}
-
-if (empty($leadSigDate)) {
-    // Attempt to extract date from the signature string (format: Team_Lead_Name DD/MM/YYYY)
-    if (preg_match('/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/', $leadSignature, $dateMatch)) {
-        $day   = (int)$dateMatch[1];
-        $month = (int)$dateMatch[2];
-        $year  = (int)$dateMatch[3];
-        if ($year < 100) {
-            $year += 2000;
-        }
-        if (checkdate($month, $day, $year)) {
-            $leadSigDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
-        } else {
-            $leadSigDate = date('Y-m-d');
-        }
-    } else {
-        $leadSigDate = date('Y-m-d');
-    }
-}
-
-if (!empty($errors)) {
-    http_response_code(422);
-    echo json_encode(['success' => false, 'errors' => $errors]);
-    exit;
-}
-
 // ── Database Operations ──────────────────────────────────────────────────────
 $pdo = getDatabaseConnection();
 if (!$pdo) {
@@ -134,7 +105,53 @@ try {
     $stmtLead = $pdo->prepare("SELECT full_name, college_email FROM `team_members` WHERE team_id = :tid AND is_lead = 1 LIMIT 1");
     $stmtLead->execute([':tid' => $teamId]);
     $leadMember = $stmtLead->fetch(PDO::FETCH_ASSOC);
-    $leadName = $leadMember['full_name'] ?? $leadSignature;
+    $leadName = $leadMember['full_name'] ?? '';
+
+    // E-Signature Name and Date Verification
+    if (!preg_match('/^(.+?)\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})$/u', $leadSignature, $sigMatch)) {
+        $errors[] = "Digital signature must be in format: Team_Lead_Name DD/MM/YYYY (e.g. " . ($leadName ?: 'Your Name') . " " . date('d/m/Y') . ").";
+    } else {
+        $typedName = trim($sigMatch[1]);
+        $typedDate = trim($sigMatch[2]);
+
+        // Check if typed name matches registered Team Lead
+        $normTyped = strtolower(trim(preg_replace('/^(dr\.|mr\.|ms\.|mrs\.|prof\.)\s*/i', '', preg_replace('/\s+/', ' ', $typedName))));
+        $normLead  = strtolower(trim(preg_replace('/^(dr\.|mr\.|ms\.|mrs\.|prof\.)\s*/i', '', preg_replace('/\s+/', ' ', $leadName))));
+
+        if (!empty($normLead) && $normTyped !== $normLead) {
+            $errors[] = "The signature name '{$typedName}' does not match your registered Team Lead name '{$leadName}'. You must sign with your own full name.";
+        }
+
+        // Check if date is valid and is TODAY'S DATE
+        if (preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/', $typedDate, $dm)) {
+            $day   = (int)$dm[1];
+            $month = (int)$dm[2];
+            $year  = (int)$dm[3];
+            if ($year < 100) $year += 2000;
+
+            if (!checkdate($month, $day, $year)) {
+                $errors[] = "The signature date '{$typedDate}' is not a valid calendar date.";
+            } else {
+                $tz = new DateTimeZone('Asia/Kolkata');
+                $today = (new DateTime('now', $tz))->format('Y-m-d');
+                $enteredDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
+
+                if ($enteredDate !== $today) {
+                    $todayDisplay = (new DateTime('now', $tz))->format('d/m/Y');
+                    $errors[] = "Signature date must be today's date ({$todayDisplay}). You entered: {$typedDate}.";
+                }
+                $leadSigDate = $enteredDate;
+            }
+        } else {
+            $errors[] = "Invalid signature date format. Must be DD/MM/YYYY.";
+        }
+    }
+
+    if (!empty($errors)) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'errors' => $errors]);
+        exit;
+    }
 
     $projectTitle = $proposal['project_title'] ?? $team['team_name'];
 

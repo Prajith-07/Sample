@@ -328,8 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div class="modal-actions">
-            <a href="submissions.php" class="btn-modal-secondary">
-              View Coordinator Directory
+            <a href="index.php" class="btn-modal-secondary">
+              Return to Home Page
             </a>
             <button type="button" class="btn-modal-primary" onclick="window.location.href='register.php?step=3&team_id=' + ${data.team_id}">
               Continue to Step 3: Readiness & TRL ➔

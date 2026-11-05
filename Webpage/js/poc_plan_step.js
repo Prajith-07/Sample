@@ -266,8 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div class="modal-actions">
-            <a href="submissions.php" class="btn-modal-secondary">
-              View Coordinator Directory
+            <a href="index.php" class="btn-modal-secondary">
+              Return to Home Page
             </a>
             <a href="register.php?step=5&team_id=${encodeURIComponent(data.team_id)}" class="btn-modal-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
               Continue to Step 5: Budget (₹1L) &rarr;

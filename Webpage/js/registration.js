@@ -319,6 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showFeedback(input, feedbackEl, true, 'Team Leader email verified');
             return;
           }
+        } else {
+          if (!val.toLowerCase().endsWith('@psgitech.ac.in')) {
+            showFeedback(input, feedbackEl, false, 'Student member email must end with @psgitech.ac.in.');
+            return;
+          }
         }
       }
 
@@ -503,13 +508,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const rollVal = (card.querySelector('[data-field="roll_number"]')?.value || '').trim();
         const emailVal = (card.querySelector('[data-field="college_email"]')?.value || '').trim();
 
-        if (!/^\d+$/.test(rollVal)) {
-          formatErrors.push(`<strong>${roleLabel}:</strong> Roll number must contain numbers only (digits 0–9).`);
+        if (!/^[A-Za-z0-9-]+$/.test(rollVal)) {
+          formatErrors.push(`<strong>${roleLabel}:</strong> Roll number must contain letters, numbers, or hyphens (e.g. 23AD01).`);
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
           formatErrors.push(`<strong>${roleLabel}:</strong> Please enter a valid email address.`);
+        } else if (idx > 0 && !emailVal.toLowerCase().endsWith('@psgitech.ac.in')) {
+          formatErrors.push(`<strong>${roleLabel}:</strong> Student member email must end with @psgitech.ac.in.`);
         }
       });
+
+      // Validate Faculty Mentor Email (@psgitech.ac.in)
+      const facEmailVal = (formData.get('faculty_email') || '').trim();
+      if (!facEmailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(facEmailVal)) {
+        formatErrors.push("<strong>Faculty Mentor:</strong> Please enter a valid email address.");
+      } else if (!facEmailVal.toLowerCase().endsWith('@psgitech.ac.in')) {
+        formatErrors.push("<strong>Faculty Mentor:</strong> Faculty email must be an official college email ending with @psgitech.ac.in.");
+      }
+
+      // Validate Additional Faculty Mentor Email (if entered)
+      const addFacEmailVal = (formData.get('add_faculty_email') || '').trim();
+      if (addFacEmailVal) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addFacEmailVal)) {
+          formatErrors.push("<strong>Additional Faculty Mentor:</strong> Please enter a valid email address.");
+        } else if (!addFacEmailVal.toLowerCase().endsWith('@psgitech.ac.in')) {
+          formatErrors.push("<strong>Additional Faculty Mentor:</strong> Faculty email must be an official college email ending with @psgitech.ac.in.");
+        }
+      }
 
       if (formatErrors.length > 0) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -642,8 +667,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div class="modal-actions">
-            <a href="submissions.php" class="btn-modal-secondary">
-              View Coordinator Directory
+            <a href="index.php" class="btn-modal-secondary">
+              Return to Home Page
             </a>
             <button type="button" class="btn-modal-primary" onclick="window.location.href='register.php?step=2&team_id=' + ${data.team_id} + '&app_no=' + encodeURIComponent('${data.application_no}')">
               Continue to Step 2: The Idea ➔
