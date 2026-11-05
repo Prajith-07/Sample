@@ -238,12 +238,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <p class="auth-intro">Team leads, team members, and mentors sign in with their registered email to view and continue their application.</p>
 
                     <?php if (!empty($authError)): ?>
-                        <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; padding: 0.85rem 1.15rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: flex-start; gap: 0.65rem;">
+                        <div class="auth-alert-error">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                             <span><?= htmlspecialchars($authError) ?></span>
                         </div>
                     <?php elseif (!empty($authSuccess)): ?>
-                        <div style="background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.4); color: #16a34a; padding: 0.85rem 1.15rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: center; gap: 0.65rem;">
+                        <div class="auth-alert-success">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             <span><?= htmlspecialchars($authSuccess) ?></span>
                         </div>

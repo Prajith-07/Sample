@@ -5450,3 +5450,265 @@ body::before {
   border-color: rgba(200, 255, 80, 0.3) !important;
 }
 
+/* 13. Step Rubric Ribbon (Steps 4 & 5) in Dark Mode */
+:root[data-theme="dark"] .step-rubric-ribbon {
+  background: linear-gradient(135deg, rgba(200, 255, 80, 0.08) 0%, rgba(14, 21, 16, 0.95) 100%) !important;
+  border: 1.5px solid rgba(200, 255, 80, 0.28) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .rubric-tag {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .rubric-tag span {
+  background: var(--accent) !important;
+  color: #121c0b !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px rgba(200, 255, 80, 0.3) !important;
+}
+
+:root[data-theme="dark"] .rubric-timeline {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .rubric-timeline strong {
+  color: var(--accent) !important;
+}
+
+/* 14. Step 5 Budget Table Elements in Dark Mode */
+:root[data-theme="dark"] .budget-table input.nature-input,
+:root[data-theme="dark"] .budget-table select.nature-select,
+:root[data-theme="dark"] .budget-item-name,
+:root[data-theme="dark"] .budget-item-qty,
+:root[data-theme="dark"] .budget-item-unit-cost,
+:root[data-theme="dark"] .budget-item-purpose {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.16) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .budget-table input.nature-input:focus,
+:root[data-theme="dark"] .budget-table select.nature-select:focus,
+:root[data-theme="dark"] .budget-item-name:focus,
+:root[data-theme="dark"] .budget-item-qty:focus,
+:root[data-theme="dark"] .budget-item-unit-cost:focus,
+:root[data-theme="dark"] .budget-item-purpose:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(200, 255, 80, 0.25) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .budget-item-amount {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.1) !important;
+}
+
+:root[data-theme="dark"] .budget-item-category {
+  background-color: #111a14 !important;
+  color: #f2f5ed !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.16) !important;
+}
+
+:root[data-theme="dark"] .budget-item-category option {
+  background-color: #111a14 !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .row-num {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 255, 80, 0.3) !important;
+}
+
+:root[data-theme="dark"] .currency-prefix {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .budget-disallowed-box {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+:root[data-theme="dark"] .budget-disallowed-header {
+  color: #fca5a5 !important;
+}
+
+:root[data-theme="dark"] .budget-disallowed-list {
+  color: #fecaca !important;
+}
+
+:root[data-theme="dark"] .high-cost-warning {
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 4px !important;
+}
+
+/* 15. Security Policy Boxes in Dark Mode */
+.auth-policy-box {
+  background: rgba(21, 128, 61, 0.08);
+  border: 1px solid rgba(21, 128, 61, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 1.5rem;
+  font-size: 0.84rem;
+  color: var(--text-dark);
+  line-height: 1.45;
+}
+
+:root[data-theme="dark"] .auth-policy-box {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border-color: rgba(200, 255, 80, 0.3) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .auth-policy-box strong {
+  color: var(--accent) !important;
+}
+
+/* 16. Mentor Approval Form in Dark Mode */
+:root[data-theme="dark"] .mentor-role-pill.role-faculty {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+}
+
+:root[data-theme="dark"] .mentor-role-pill.role-industry {
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+:root[data-theme="dark"] .endorse-header-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-left: 5px solid var(--accent) !important;
+}
+
+:root[data-theme="dark"] .dossier-field-box {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(236, 246, 234, 0.12) !important;
+}
+
+:root[data-theme="dark"] .dossier-field-box h4 {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .dossier-field-box p {
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .consent-card {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+:root[data-theme="dark"] .consent-card h2 {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .consent-card p {
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .consent-text {
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .consent-text strong {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .lead-undertaking-box {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border: 1px solid rgba(200, 255, 80, 0.25) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .lead-undertaking-box strong {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .lead-undertaking-box em {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .btn-decline-toggle {
+  border-color: #f87171 !important;
+  color: #f87171 !important;
+}
+
+:root[data-theme="dark"] .btn-decline-toggle:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+:root[data-theme="dark"] .decline-box {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+:root[data-theme="dark"] .decline-box h4 {
+  color: #fca5a5 !important;
+}
+
+:root[data-theme="dark"] .status-badge-approved {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+}
+
+:root[data-theme="dark"] .status-badge-declined {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 17. Badges & Tranches Contrast Enhancements in Dark Mode */
+:root[data-theme="dark"] .mentor-badge-req {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 255, 80, 0.4) !important;
+}
+
+:root[data-theme="dark"] .mentor-badge-opt {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #a2ada3 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+:root[data-theme="dark"] .badge-pill-lead {
+  background: var(--accent) !important;
+  color: #121c0b !important;
+}
+
+:root[data-theme="dark"] .lead-info-tag {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .tranche-1 .tranche-badge {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tranche-2 .tranche-badge {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fde047 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tranche-3 .tranche-badge {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tranche-stage-name {
+  color: #ffffff !important;
+}
+
