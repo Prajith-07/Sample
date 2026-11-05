@@ -149,7 +149,7 @@ foreach ($members as $idx => $m) {
     // Email
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "{$label}: A valid email address is required.";
-    } elseif (!$isLead && !preg_match('/@psgitech\.ac\.in$/i', $email)) {
+    } elseif (!preg_match('/@psgitech\.ac\.in$/i', $email)) {
         $errors[] = "{$label}: Official college email ending with @psgitech.ac.in is required (e.g. member@psgitech.ac.in).";
     } elseif (in_array($email, $seenEmails)) {
         $errors[] = "Duplicate Email detected: '{$email}' is entered more than once within your team.";

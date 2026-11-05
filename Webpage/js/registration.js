@@ -491,6 +491,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formAlertBox.innerHTML = '';
       }
 
+      const formData = new FormData(teamForm);
+
       // Check interdisciplinary team rule client-side
       if (!checkInterdisciplinaryRule()) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -500,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Validate Roll Number (numbers only) & Email for all members
+      // Validate Roll Number & Email for all members
       const memberCards = membersContainer.querySelectorAll('.member-slot-card');
       const formatErrors = [];
       memberCards.forEach((card, idx) => {
@@ -513,8 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
           formatErrors.push(`<strong>${roleLabel}:</strong> Please enter a valid email address.`);
-        } else if (idx > 0 && !emailVal.toLowerCase().endsWith('@psgitech.ac.in')) {
-          formatErrors.push(`<strong>${roleLabel}:</strong> Student member email must end with @psgitech.ac.in.`);
+        } else if (!emailVal.toLowerCase().endsWith('@psgitech.ac.in')) {
+          formatErrors.push(`<strong>${roleLabel}:</strong> Official college email must end with @psgitech.ac.in.`);
         }
       });
 
@@ -548,8 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.innerHTML = `<span>Validating & Saving Step 1...</span>`;
 
       try {
-        const formData = new FormData(teamForm);
-
         // Build structured JSON
         const payload = {
           team_id: formData.get('team_id') || 0,
