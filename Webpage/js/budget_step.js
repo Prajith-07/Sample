@@ -14,14 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const grandTotalEl = document.getElementById('grandTotalDisplay');
   const ceilingStatusEl = document.getElementById('ceilingStatusDisplay');
 
-  // Tranche Displays
-  const tranche1El = document.getElementById('tranche1Display');
-  const tranche2El = document.getElementById('tranche2Display');
-  const tranche3El = document.getElementById('tranche3Display');
-
-  // Category Summary Grid
-  const categorySummaryGrid = document.getElementById('categorySummaryGrid');
-
   const MAX_GRANT = 100000.00;
   const SINGLE_ITEM_APPROVAL_THRESHOLD = 5000.00;
 
@@ -130,34 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
           submitBtn.removeAttribute('title');
         }
       }
-    }
-
-    // Update 3-Tranche Release Values
-    const tranche1Val = round2(grandTotal * 0.50);
-    const tranche2Val = round2(grandTotal * 0.30);
-    const tranche3Val = round2(grandTotal * 0.20);
-
-    if (tranche1El) tranche1El.textContent = formatINR(tranche1Val);
-    if (tranche2El) tranche2El.textContent = formatINR(tranche2Val);
-    if (tranche3El) tranche3El.textContent = formatINR(tranche3Val);
-
-    // Update Category Summary Grid
-    if (categorySummaryGrid) {
-      let gridHtml = '';
-      CATEGORIES.forEach(cat => {
-        const catAmount = categoryTotals[cat] || 0;
-        const pct = grandTotal > 0 ? ((catAmount / grandTotal) * 100).toFixed(1) : '0.0';
-        gridHtml += `
-          <div class="budget-cat-card">
-            <div class="budget-cat-name">${escapeHtml(cat)}</div>
-            <div style="text-align: right;">
-              <div class="budget-cat-val">${formatINR(catAmount)}</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">${pct}% of Total</div>
-            </div>
-          </div>
-        `;
-      });
-      categorySummaryGrid.innerHTML = gridHtml;
     }
   }
 
