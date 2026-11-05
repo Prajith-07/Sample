@@ -276,7 +276,7 @@ if ($pdo) {
               <th>Team Lead</th>
               <th>Dept / Roll No</th>
               <th>Team Size</th>
-              <th>Diversity Rule</th>
+              <th>Diversity</th>
               <th>Mentors</th>
               <th>Status</th>
               <th>Date Registered</th>
@@ -361,13 +361,13 @@ if ($pdo) {
                   </span>
                 </td>
                 <td>
-                  <?php if ($t['has_woman_member']): ?>
+                  <?php if (!empty($t['has_woman_member'])): ?>
                     <span class="diversity-badge-ok">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      Verified (Pass)
+                      Woman Member
                     </span>
                   <?php else: ?>
-                    <span class="diversity-badge-fail">Pending</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted, #64748b);">—</span>
                   <?php endif; ?>
                 </td>
                 <td>

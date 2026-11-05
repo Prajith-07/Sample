@@ -8,14 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const membersContainer = document.getElementById('membersContainer');
   const addMemberBtn = document.getElementById('addMemberBtn');
   const memberCountBadge = document.getElementById('memberCountBadge');
-  const diversityStatusBadge = document.getElementById('diversityStatusBadge');
   const interdisciplinaryStatusBadge = document.getElementById('interdisciplinaryStatusBadge');
   const teamForm = document.getElementById('teamRegistrationForm');
   const formAlertBox = document.getElementById('formAlertBox');
   const toggleAddFacultyBtn = document.getElementById('toggleAddFacultyBtn');
   const addFacultyCard = document.getElementById('addFacultyCard');
 
-  const MAX_MEMBERS = 5;
+  const MAX_MEMBERS = 4;
   const MIN_MEMBERS = 2;
   let debounceTimers = {};
 
@@ -51,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentCount >= MAX_MEMBERS) {
         addMemberBtn.disabled = true;
         addMemberBtn.classList.add('btn-disabled');
-        addMemberBtn.textContent = `Maximum 5 Members Reached`;
+        addMemberBtn.textContent = `Maximum 4 Members Reached`;
       } else {
         addMemberBtn.disabled = false;
         addMemberBtn.classList.remove('btn-disabled');
@@ -88,41 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    checkDiversityRule();
     checkInterdisciplinaryRule();
   }
 
-  // 2. Woman Member Live Diversity Check
-  function checkDiversityRule() {
-    const genderSelects = membersContainer.querySelectorAll('select.member-gender');
-    let hasFemale = false;
-
-    genderSelects.forEach(sel => {
-      if (sel.value === 'Female') {
-        hasFemale = true;
-      }
-    });
-
-    if (diversityStatusBadge) {
-      if (hasFemale) {
-        diversityStatusBadge.className = 'diversity-pill diversity-met';
-        diversityStatusBadge.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-          <span><strong>Diversity Met:</strong> Woman member included</span>
-        `;
-      } else {
-        diversityStatusBadge.className = 'diversity-pill diversity-pending';
-        diversityStatusBadge.innerHTML = `
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <span><strong>Mandatory Rule:</strong> Woman member required</span>
-        `;
-      }
-    }
-
-    return hasFemale;
-  }
-
-  // 2b. Interdisciplinary Team Live Check (Min 2 Different Departments)
+  // 2. Interdisciplinary Team Live Check (Min 2 Different Departments)
   function checkInterdisciplinaryRule() {
     const deptSelects = membersContainer.querySelectorAll('select[data-field="department"]');
     const depts = new Set();
@@ -252,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <option value="Female">Female</option>
             <option value="Male">Male</option>
           </select>
-          <span class="field-hint">Used for mandatory woman member rule verification.</span>
         </div>
       </div>
     `;
@@ -268,12 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
           updateTeamSizeUI();
         }, 250);
       });
-    }
-
-    // Attach gender change event
-    const genderSel = card.querySelector('select.member-gender');
-    if (genderSel) {
-      genderSel.addEventListener('change', checkDiversityRule);
     }
 
     // Attach department change event
@@ -484,15 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formAlertBox.innerHTML = '';
       }
 
-      // Check diversity rule client-side first
-      if (!checkDiversityRule()) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        showFormAlert('error', [
-          "<strong>Mandatory Diversity Rule:</strong> Your team must have at least one woman member (Female) to be eligible for the iTech Seed Grand Challenge 2027 grant."
-        ]);
-        return;
-      }
-
       // Check interdisciplinary team rule client-side
       if (!checkInterdisciplinaryRule()) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -644,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="modal-summary-grid">
             <div class="summary-pill">Team Size: <strong>${data.team_size} Members</strong></div>
-            <div class="summary-pill">Diversity Rule: <strong>Verified (Pass)</strong></div>
+            <div class="summary-pill">Interdisciplinary: <strong>Verified (Pass)</strong></div>
             <div class="summary-pill">Mentors: <strong>Assigned</strong></div>
           </div>
 

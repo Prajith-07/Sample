@@ -65,10 +65,10 @@ if (empty($teamName)) {
     }
 }
 
-// 2. Team Size Validation (2 to 5 members)
+// 2. Team Size Validation (2 to 4 members)
 $memberCount = is_array($members) ? count($members) : 0;
-if ($memberCount < 2 || $memberCount > 5) {
-    $errors[] = "Team size must be between 2 and 5 members. Current count: {$memberCount}.";
+if ($memberCount < 2 || $memberCount > 4) {
+    $errors[] = "Team size must be between 2 and 4 members. Current count: {$memberCount}.";
 }
 
 // 3. Member Slot Validations & Internal Duplicate Checks
@@ -176,10 +176,8 @@ foreach ($members as $idx => $m) {
     ];
 }
 
-// 4. Woman Member Rule Enforcement
-if (!$hasFemale) {
-    $errors[] = "Mandatory Diversity Rule: The team must include at least one woman member (Female).";
-}
+// 4. Woman Member Rule Enforcement (Removed - condition is optional)
+// if (!$hasFemale) { ... }
 
 // 4b. Interdisciplinary Team Rule Enforcement (At least 2 distinct departments)
 $uniqueDepts = array_unique(array_filter($seenDepts));
@@ -356,7 +354,7 @@ try {
         // Update existing team
         $stmt = $pdo->prepare("
             UPDATE `teams` 
-            SET `team_name` = :tname, `leader_email` = :lemail, `password_hash` = :phash, `team_size` = :tsize, `has_woman_member` = 1, `updated_at` = NOW()
+            SET `team_name` = :tname, `leader_email` = :lemail, `password_hash` = :phash, `team_size` = :tsize, `has_woman_member` = :has_woman, `updated_at` = NOW()
             WHERE `id` = :tid
         ");
         $stmt->execute([
@@ -364,6 +362,7 @@ try {
             ':lemail' => $leadEmail,
             ':phash' => $leadPasswordHash,
             ':tsize' => count($validMembers),
+            ':has_woman' => $hasFemale ? 1 : 0,
             ':tid' => $teamId
         ]);
 
@@ -382,14 +381,15 @@ try {
 
         $stmt = $pdo->prepare("
             INSERT INTO `teams` (`application_no`, `team_name`, `leader_email`, `password_hash`, `team_size`, `has_woman_member`, `current_step`, `status`)
-            VALUES (:app_no, :tname, :lemail, :phash, :tsize, 1, 1, 'Draft')
+            VALUES (:app_no, :tname, :lemail, :phash, :tsize, :has_woman, 1, 'Draft')
         ");
         $stmt->execute([
             ':app_no' => $applicationNo,
             ':tname' => $teamName,
             ':lemail' => $leadEmail,
             ':phash' => $leadPasswordHash,
-            ':tsize' => count($validMembers)
+            ':tsize' => count($validMembers),
+            ':has_woman' => $hasFemale ? 1 : 0
         ]);
         $teamId = (int)$pdo->lastInsertId();
     }

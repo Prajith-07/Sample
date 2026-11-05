@@ -1833,20 +1833,16 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
            ================================================================== -->
       <?php else: ?>
 
-        <!-- LIVE DIVERSITY, INTERDISCIPLINARY & TEAM SIZE BAR -->
+        <!-- LIVE INTERDISCIPLINARY & TEAM SIZE BAR -->
         <div class="diversity-status-wrapper">
           <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            <div id="diversityStatusBadge" class="diversity-pill diversity-pending">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              <span><strong>Mandatory Rule:</strong> At least one woman member required</span>
-            </div>
             <div id="interdisciplinaryStatusBadge" class="diversity-pill diversity-pending">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
               <span><strong>Mandatory Rule:</strong> Interdisciplinary team (min 2 departments)</span>
             </div>
           </div>
           <div class="team-size-counter-badge" id="memberCountBadge">
-            2 / 5 Members
+            2 / 4 Members
           </div>
         </div>
 
@@ -1890,12 +1886,12 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
             </div>
           </div>
 
-          <!-- SECTION 2: TEAM MEMBERS (SLOT 1 IS TEAM LEAD, 2 TO 5 MEMBERS) -->
+          <!-- SECTION 2: TEAM MEMBERS (SLOT 1 IS TEAM LEAD, 2 TO 4 MEMBERS) -->
           <div class="glass-panel" style="margin-bottom: 2rem;">
             <div class="section-heading-row">
               <h2 class="section-title">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
-                Team Members (2 to 5 Students)
+                Team Members (2 to 4 Students)
               </h2>
               <span class="section-hint">II, III, or Final year PSG iTech students</span>
             </div>
@@ -1908,7 +1904,7 @@ if ($pdo && ($editTeamId > 0 || !empty($appNo))) {
             <!-- Add Member Button -->
             <div class="add-member-area">
               <button type="button" id="addMemberBtn" class="btn-add-member">
-                + Add Team Member (3 of 5)
+                + Add Team Member (3 of 4)
               </button>
             </div>
           </div>
