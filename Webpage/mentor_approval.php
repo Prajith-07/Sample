@@ -439,10 +439,10 @@ if (empty($token) || strlen($token) < 32) {
             <?php endforeach; ?>
           </div>
 
-          <div style="margin-top: 1.25rem; padding: 1rem 1.25rem; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; font-size: 0.85rem; color: var(--text-forest);">
+          <div class="lead-undertaking-box" style="margin-top: 1.25rem; padding: 1rem 1.25rem; border-radius: 8px; font-size: 0.85rem;">
             <strong>Lead E-Signature:</strong> <?= htmlspecialchars($proposal['lead_signature_name'] ?? 'Pending') ?> 
-            · <strong>Date:</strong> <?= htmlspecialchars($proposal['lead_signature_date'] ?? 'N/A') ?>
-            · <em>All 5 mandatory team declarations (originality, no duplicate funding, DPIIT undertaking, IPR policy, mentor guidance) have been affirmed by the Team Lead.</em>
+            &bull; <strong>Date:</strong> <?= htmlspecialchars($proposal['lead_signature_date'] ?? 'N/A') ?>
+            &bull; <em>All 5 mandatory team declarations (originality, no duplicate funding, DPIIT undertaking, IPR policy, mentor guidance) have been affirmed by the Team Lead.</em>
           </div>
         </section>
 

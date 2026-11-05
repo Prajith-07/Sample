@@ -178,13 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </p>
 
                     <?php if (!empty($error)): ?>
-                        <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; padding: 0.85rem 1.15rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; align-items: flex-start; gap: 0.65rem; line-height: 1.45;">
+                        <div class="auth-alert-error">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                             <div><?= htmlspecialchars($error) ?></div>
                         </div>
                     <?php endif; ?>
 
-                    <div style="background: rgba(21, 128, 61, 0.08); border: 1px solid rgba(21, 128, 61, 0.25); border-radius: 10px; padding: 12px 14px; margin-bottom: 1.5rem; font-size: 0.84rem; color: var(--text-main, #1e293b); line-height: 1.45;">
+                    <div class="auth-policy-box">
                         <strong>Security Policy:</strong> Your new password must be at least 6 characters and cannot be your mobile phone number.
                     </div>
 

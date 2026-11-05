@@ -5202,7 +5202,566 @@ body::before {
   border-color: rgba(236, 246, 234, 0.12) !important;
 }
 
+/* 8. Registration Add Member Button in Dark Mode */
+:root[data-theme="dark"] .btn-add-member {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border: 2px dashed var(--accent) !important;
+  color: var(--accent) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
 
+:root[data-theme="dark"] .btn-add-member:hover:not(:disabled) {
+  background: var(--accent) !important;
+  border-style: solid !important;
+  color: #121c0b !important;
+  box-shadow: 0 8px 24px rgba(200, 255, 80, 0.35) !important;
+  transform: translateY(-2px);
+}
 
+:root[data-theme="dark"] .btn-add-member.btn-disabled {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(162, 173, 163, 0.5) !important;
+}
 
+/* 9. Step 2-7 Team Context Banner in Dark Mode */
+:root[data-theme="dark"] .team-context-banner {
+  background: linear-gradient(135deg, rgba(200, 255, 80, 0.08) 0%, rgba(14, 21, 16, 0.95) 100%) !important;
+  border: 1.5px solid rgba(200, 255, 80, 0.28) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .team-context-left span {
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .team-context-left strong {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .app-ref-badge {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 255, 80, 0.35) !important;
+}
+
+:root[data-theme="dark"] .team-context-right a {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .team-context-right a:hover {
+  text-decoration: underline !important;
+}
+
+/* 10. PoC Radio Selection Cards (Step 2) in Dark Mode */
+:root[data-theme="dark"] .poc-radio-card {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card:hover {
+  background: rgba(255, 255, 255, 0.075) !important;
+  border-color: rgba(200, 255, 80, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card.poc-card-active {
+  background: linear-gradient(135deg, rgba(200, 255, 80, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 24px rgba(200, 255, 80, 0.22), inset 0 0 12px rgba(200, 255, 80, 0.06) !important;
+}
+
+:root[data-theme="dark"] .poc-card-title {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .poc-card-desc {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .poc-radio-indicator {
+  border: 2px solid rgba(200, 255, 80, 0.4) !important;
+  background: transparent !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card.poc-card-active .poc-radio-indicator {
+  border-color: var(--accent) !important;
+  background: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .poc-radio-card.poc-card-active .poc-radio-indicator::after {
+  background: #111a14 !important;
+  opacity: 1 !important;
+}
+
+/* 11. 6-Month Milestone Implementation Roadmap (Step 4) in Dark Mode */
+:root[data-theme="dark"] .milestones-table-wrap {
+  background: rgba(14, 21, 16, 0.9) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .milestones-table thead {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 2px solid rgba(200, 255, 80, 0.25) !important;
+}
+
+:root[data-theme="dark"] .milestones-table th {
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+
+:root[data-theme="dark"] .milestones-table td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(236, 246, 234, 0.08) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .milestones-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+:root[data-theme="dark"] .month-badge-primary {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .month-date-sub {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .milestone-event-review {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fcd34d !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+:root[data-theme="dark"] .milestone-event-demo {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tr-highlight-review {
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+:root[data-theme="dark"] .tr-highlight-demo {
+  background: rgba(16, 185, 129, 0.05) !important;
+}
+
+:root[data-theme="dark"] .milestone-cell-textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.16) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .milestone-cell-textarea:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(200, 255, 80, 0.25) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .milestone-cell-textarea::placeholder {
+  color: rgba(162, 173, 163, 0.5) !important;
+}
+
+/* 12. Step 5 Budget Table & Tranche Items in Dark Mode */
+:root[data-theme="dark"] .budget-table-wrap {
+  background: rgba(14, 21, 16, 0.9) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .budget-table thead {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 2px solid rgba(200, 255, 80, 0.25) !important;
+}
+
+:root[data-theme="dark"] .budget-table th {
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+
+:root[data-theme="dark"] .budget-table td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(236, 246, 234, 0.08) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .budget-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+:root[data-theme="dark"] .row-num {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .btn-add-item {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border: 1.5px dashed var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .btn-add-item:hover {
+  background: var(--accent) !important;
+  border-style: solid !important;
+  color: #121c0b !important;
+}
+
+:root[data-theme="dark"] .tranche-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .tranche-item:hover {
+  border-color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .expandable-funding-block {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(236, 246, 234, 0.12) !important;
+}
+
+:root[data-theme="dark"] .funding-notice-bar {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border-left-color: var(--accent) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .success-modal-card {
+  background: #111a14 !important;
+  border-color: rgba(200, 255, 80, 0.35) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .modal-title {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .modal-sub {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .modal-app-box {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(200, 255, 80, 0.3) !important;
+}
+
+/* 13. Step Rubric Ribbon (Steps 4 & 5) in Dark Mode */
+:root[data-theme="dark"] .step-rubric-ribbon {
+  background: linear-gradient(135deg, rgba(200, 255, 80, 0.08) 0%, rgba(14, 21, 16, 0.95) 100%) !important;
+  border: 1.5px solid rgba(200, 255, 80, 0.28) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-theme="dark"] .rubric-tag {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .rubric-tag span {
+  background: var(--accent) !important;
+  color: #121c0b !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px rgba(200, 255, 80, 0.3) !important;
+}
+
+:root[data-theme="dark"] .rubric-timeline {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .rubric-timeline strong {
+  color: var(--accent) !important;
+}
+
+/* 14. Step 5 Budget Table Elements in Dark Mode */
+:root[data-theme="dark"] .budget-table input.nature-input,
+:root[data-theme="dark"] .budget-table select.nature-select,
+:root[data-theme="dark"] .budget-item-name,
+:root[data-theme="dark"] .budget-item-qty,
+:root[data-theme="dark"] .budget-item-unit-cost,
+:root[data-theme="dark"] .budget-item-purpose {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.16) !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .budget-table input.nature-input:focus,
+:root[data-theme="dark"] .budget-table select.nature-select:focus,
+:root[data-theme="dark"] .budget-item-name:focus,
+:root[data-theme="dark"] .budget-item-qty:focus,
+:root[data-theme="dark"] .budget-item-unit-cost:focus,
+:root[data-theme="dark"] .budget-item-purpose:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(200, 255, 80, 0.25) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .budget-item-amount {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.1) !important;
+}
+
+:root[data-theme="dark"] .budget-item-category {
+  background-color: #111a14 !important;
+  color: #f2f5ed !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.16) !important;
+}
+
+:root[data-theme="dark"] .budget-item-category option {
+  background-color: #111a14 !important;
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .row-num {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 255, 80, 0.3) !important;
+}
+
+:root[data-theme="dark"] .currency-prefix {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .budget-disallowed-box {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+:root[data-theme="dark"] .budget-disallowed-header {
+  color: #fca5a5 !important;
+}
+
+:root[data-theme="dark"] .budget-disallowed-list {
+  color: #fecaca !important;
+}
+
+:root[data-theme="dark"] .high-cost-warning {
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 4px !important;
+}
+
+/* 15. Security Policy Boxes in Dark Mode */
+.auth-policy-box {
+  background: rgba(21, 128, 61, 0.08);
+  border: 1px solid rgba(21, 128, 61, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 1.5rem;
+  font-size: 0.84rem;
+  color: var(--text-dark);
+  line-height: 1.45;
+}
+
+:root[data-theme="dark"] .auth-policy-box {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border-color: rgba(200, 255, 80, 0.3) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .auth-policy-box strong {
+  color: var(--accent) !important;
+}
+
+/* 16. Mentor Approval Form in Dark Mode */
+:root[data-theme="dark"] .mentor-role-pill.role-faculty {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+}
+
+:root[data-theme="dark"] .mentor-role-pill.role-industry {
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+:root[data-theme="dark"] .endorse-header-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-left: 5px solid var(--accent) !important;
+}
+
+:root[data-theme="dark"] .dossier-field-box {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(236, 246, 234, 0.12) !important;
+}
+
+:root[data-theme="dark"] .dossier-field-box h4 {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .dossier-field-box p {
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .consent-card {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+:root[data-theme="dark"] .consent-card h2 {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .consent-card p {
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .consent-text {
+  color: #f2f5ed !important;
+}
+
+:root[data-theme="dark"] .consent-text strong {
+  color: #ffffff !important;
+}
+
+:root[data-theme="dark"] .lead-undertaking-box {
+  background: rgba(200, 255, 80, 0.08) !important;
+  border: 1px solid rgba(200, 255, 80, 0.25) !important;
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .lead-undertaking-box strong {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .lead-undertaking-box em {
+  color: #a2ada3 !important;
+}
+
+:root[data-theme="dark"] .btn-decline-toggle {
+  border-color: #f87171 !important;
+  color: #f87171 !important;
+}
+
+:root[data-theme="dark"] .btn-decline-toggle:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+:root[data-theme="dark"] .decline-box {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+:root[data-theme="dark"] .decline-box h4 {
+  color: #fca5a5 !important;
+}
+
+:root[data-theme="dark"] .status-badge-approved {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+}
+
+:root[data-theme="dark"] .status-badge-declined {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 17. Badges & Tranches Contrast Enhancements in Dark Mode */
+:root[data-theme="dark"] .mentor-badge-req {
+  background: rgba(200, 255, 80, 0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(200, 255, 80, 0.4) !important;
+}
+
+:root[data-theme="dark"] .mentor-badge-opt {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #a2ada3 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+:root[data-theme="dark"] .badge-pill-lead {
+  background: var(--accent) !important;
+  color: #121c0b !important;
+}
+
+:root[data-theme="dark"] .lead-info-tag {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] .tranche-1 .tranche-badge {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tranche-2 .tranche-badge {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fde047 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tranche-3 .tranche-badge {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+:root[data-theme="dark"] .tranche-stage-name {
+  color: #ffffff !important;
+}
+
+/* 18. Budget Category Summary Grid */
+.budget-category-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.budget-cat-card {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.15rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.budget-cat-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--clover-green);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.08);
+}
+
+.budget-cat-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--forest-dark);
+  max-width: 68%;
+  line-height: 1.35;
+}
+
+.budget-cat-val {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--clover-green);
+  text-align: right;
+}
+
+:root[data-theme="dark"] .budget-cat-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1.5px solid rgba(236, 246, 234, 0.12) !important;
+}
+
+:root[data-theme="dark"] .budget-cat-name {
+  color: #d1ded3 !important;
+}
+
+:root[data-theme="dark"] .budget-cat-val {
+  color: var(--accent) !important;
+}
 
