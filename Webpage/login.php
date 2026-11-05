@@ -47,6 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($email) || empty($password)) {
         $authError = "Please enter both your registered email and password.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $authError = "Please enter a valid email address.";
+    } elseif (!str_ends_with($email, '@psgitech.ac.in')) {
+        $authError = "Access restricted: Only official college email addresses ending with \"@psgitech.ac.in\" are accepted.";
     } else {
         $pdo = getDatabaseConnection();
         if (!$pdo) {
@@ -262,8 +266,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <form class="auth-form" method="POST" action="login.php" data-auth-form>
                         <div class="auth-field">
-                            <label for="login-email">Registered Email</label>
-                            <input class="auth-input" id="login-email" name="email" type="email" autocomplete="email" placeholder="Enter your registered email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                            <label for="login-email">Registered College Email</label>
+                            <input class="auth-input" id="login-email" name="email" type="email" autocomplete="email" placeholder="e.g. 23cs045@psgitech.ac.in" pattern="^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$" title="Only @psgitech.ac.in domain emails are accepted" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                            <span class="auth-field__help">Must be an official @psgitech.ac.in college email address</span>
                         </div>
 
                         <div class="auth-field">

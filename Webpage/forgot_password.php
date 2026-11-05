@@ -19,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Please enter your registered email address.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Please enter a valid email address.";
+    } elseif (!str_ends_with($email, '@psgitech.ac.in')) {
+        $error = "Access restricted: Only official college email addresses ending with \"@psgitech.ac.in\" are accepted.";
     } else {
         $pdo = getDatabaseConnection();
         if (!$pdo) {
@@ -182,8 +184,9 @@ HTML;
 
                     <form class="auth-form" method="POST" action="forgot_password.php" data-auth-form>
                         <div class="auth-field">
-                            <label for="recovery-email">Registered Email</label>
-                            <input class="auth-input" id="recovery-email" name="email" type="email" autocomplete="email" placeholder="Enter your registered email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                            <label for="recovery-email">Registered College Email</label>
+                            <input class="auth-input" id="recovery-email" name="email" type="email" autocomplete="email" placeholder="e.g. 23cs045@psgitech.ac.in" pattern="^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$" title="Only @psgitech.ac.in domain emails are accepted" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                            <span class="auth-field__help">Must be an official @psgitech.ac.in college email address</span>
                         </div>
 
                         <button class="button button--primary auth-submit" type="submit">Send Reset Link &rarr;</button>

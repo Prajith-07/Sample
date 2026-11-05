@@ -45,6 +45,16 @@
                     return;
                 }
 
+                if (!emailVal.endsWith('@psgitech.ac.in')) {
+                    emailAvailable = false;
+                    feedbackEl.style.display = 'block';
+                    feedbackEl.style.color = '#dc2626';
+                    feedbackEl.innerHTML = 'Only official @psgitech.ac.in college email addresses are accepted.';
+                    leadEmailInput.style.borderColor = '#ef4444';
+                    checkFormValidity();
+                    return;
+                }
+
                 emailDebounceTimer = setTimeout(async () => {
                     try {
                         const res = await fetch(`api/check_duplicate.php?field=college_email&value=${encodeURIComponent(emailVal)}`);
@@ -77,6 +87,15 @@
             const requiredInputs = form.querySelectorAll('input[required]');
             requiredInputs.forEach((inp) => {
                 if (!inp.value.trim()) {
+                    isValid = false;
+                }
+            });
+
+            // Enforce @psgitech.ac.in domain on email inputs
+            const emailInputs = form.querySelectorAll('input[type="email"]');
+            emailInputs.forEach((inp) => {
+                const val = inp.value.trim().toLowerCase();
+                if (val && !val.endsWith('@psgitech.ac.in')) {
                     isValid = false;
                 }
             });

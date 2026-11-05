@@ -39,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $authError = "Please fill in all required fields.";
     } elseif (!filter_var($leaderEmail, FILTER_VALIDATE_EMAIL)) {
         $authError = "Please enter a valid email address.";
+    } elseif (!str_ends_with($leaderEmail, '@psgitech.ac.in')) {
+        $authError = "Access restricted: Only official college email addresses ending with \"@psgitech.ac.in\" are accepted for registration.";
     } elseif (strlen($password) < 6) {
         $authError = "Team password must be at least 6 characters in length.";
     } elseif ($password !== $confirmPassword) {
@@ -181,8 +183,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <form class="auth-form" method="POST" action="signup.php" data-auth-form>
                         <div class="auth-field">
-                            <label for="team-leader-email">Team Leader Email</label>
-                            <input class="auth-input" id="team-leader-email" name="team_leader_email" type="email" autocomplete="email" placeholder="e.g. 23cs045@psgitech.ac.in or leader@gmail.com" value="<?= htmlspecialchars($_POST['team_leader_email'] ?? '') ?>" required>
+                            <label for="team-leader-email">Team Leader College Email</label>
+                            <input class="auth-input" id="team-leader-email" name="team_leader_email" type="email" autocomplete="email" placeholder="e.g. 23cs045@psgitech.ac.in" pattern="^[a-zA-Z0-9._%+-]+@psgitech\.ac\.in$" title="Only @psgitech.ac.in domain emails are accepted" value="<?= htmlspecialchars($_POST['team_leader_email'] ?? '') ?>" required>
+                            <span class="auth-field__help">Must be an official @psgitech.ac.in college email address</span>
                             <div id="email-duplicate-feedback" style="font-size: 0.83rem; margin-top: 0.35rem; display: none;"></div>
                         </div>
 
